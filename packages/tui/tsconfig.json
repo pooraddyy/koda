@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@tsconfig/bun/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@opentui/solid",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "noUncheckedIndexedAccess": false,
+    // koda_change - resolve koda integrations retained during upstream's standalone TUI extraction
+    "paths": {
+      "@/*": ["../opencode/src/*"],
+      "@tui/*": ["./src/*"]
+    }
+  },
+  // koda_change - include ambient declarations used by retained koda imports from opencode
+  "include": ["src", "test", "../opencode/src/*.d.ts"]
+}

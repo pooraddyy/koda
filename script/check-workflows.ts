@@ -1,0 +1,69 @@
+#!/usr/bin/env bun
+// koda_change - new file
+
+/**
+ * Guards the deliberately small terminal-only CI surface.
+ *
+ * A workflow can publish packages, consume credentials, or execute code in a
+ * privileged runner. The allowlist below makes every added or removed workflow
+ * an explicit review decision.
+ *
+ * Only runnable workflows are checked (`.yml` / `.yaml`). Files under
+ * `.github/workflows/disabled/` files cannot run and are not tracked here.
+ *
+ * To accept a new workflow: add its filename to `active`.
+ * To drop one: remove its filename from the list.
+ */
+
+import { readdirSync } from "node:fs"
+import path from "node:path"
+
+const ROOT = path.resolve(import.meta.dir, "..")
+const DIR = path.join(ROOT, ".github", "workflows")
+
+// Workflows we have deliberately accepted into CI. Sort alphabetically.
+const active = new Set([
+  "beta.yml",
+  "check-forbidden-strings.yml",
+  "check-koda-generated-artifacts.yml",
+  "check-md-table-padding.yml",
+  "check-opencode-annotations.yml",
+  "codeql.yml",
+  "containers.yml",
+  "generate.yml",
+  "koda-auto-close.yml",
+  "nix-eval.yml",
+  "nix-hashes.yml",
+  "publish.yml",
+  "smoke-test.yml",
+  "test.yml",
+  "typecheck.yml",
+])
+
+// GitHub picks up both .yml and .yaml in .github/workflows/. We accept both so
+// an upstream `.yaml` addition also shows up as unexpected drift.
+const isWorkflow = (f: string) => f.endsWith(".yml") || f.endsWith(".yaml")
+const actualActive = new Set(readdirSync(DIR).filter(isWorkflow))
+
+const missing = [...active].filter((f) => !actualActive.has(f)).sort()
+const extra = [...actualActive].filter((f) => !active.has(f)).sort()
+const errs: string[] = []
+for (const f of extra) {
+  errs.push(`unexpected workflow: ${f} — if this was added intentionally, add it to script/check-workflows.ts`)
+}
+for (const f of missing) {
+  errs.push(
+    `expected workflow not found: ${f} — if this was removed intentionally, remove it from script/check-workflows.ts`,
+  )
+}
+
+if (errs.length === 0) {
+  console.log(`check-workflows: ok (${actualActive.size} workflows).`)
+  process.exit(0)
+}
+
+for (const e of errs) console.error(e)
+console.error("")
+console.error(`Found ${errs.length} workflow drift issue(s).`)
+console.error("This guard prevents unreviewed workflow changes from silently running in CI.")
+process.exit(1)
