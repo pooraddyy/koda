@@ -1,0 +1,26 @@
+# koda_change - new file
+name: Check koda generated artifacts
+
+on:
+  pull_request:
+    paths:
+      - ".gitignore"
+      - ".github/workflows/check-koda-generated-artifacts.yml"
+      - ".koda/**"
+      - "script/check-koda-generated-artifacts.ts"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check koda generated artifacts
+    if: github.repository == 'pooraddyy/koda'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6 # koda_change
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Run check
+        run: bun run script/check-koda-generated-artifacts.ts

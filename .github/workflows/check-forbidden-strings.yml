@@ -1,0 +1,21 @@
+# koda_change - new file
+name: Check forbidden strings
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check forbidden strings
+    if: github.repository == 'pooraddyy/koda'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6 # koda_change
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Run check
+        run: bun run script/check-forbidden-strings.ts

@@ -1,0 +1,58 @@
+.husky/_
+.DS_Store
+.secrets/
+node_modules
+.worktrees
+.sst
+.env
+.env.local
+*.code-workspace
+.codex
+*~
+playground
+tmp
+dist
+ts-dist
+storybook-static
+.turbo
+**/.serena
+.serena/
+**/.omo
+.omo/
+/result
+refs
+Session.vim
+/opencode.json
+a.out
+target
+.scripts
+.direnv/
+
+# Local dev files
+opencode-dev
+.koda-dev/
+UPCOMING_CHANGELOG.md
+logs/
+*.bun-build
+
+# Telemetry ID
+telemetry-id
+tsconfig.tsbuildinfo
+
+# koda
+.koda/.gitignore
+.koda/package.json
+.koda/package-lock.json
+.koda/pnpm-lock.yaml
+.koda/bun.lock
+.koda/yarn.lock
+.koda/node_modules
+
+# Runtime-generated per-directory TUI config (e.g. written by `PATCH /tui/config`
+# during local testing); should never be committed.
+packages/*/.koda/tui.json
+packages/*/.koda/tui.jsonc
+
+# Test Artifacts
+packages/app/.artifacts/
+packages/opencode/.artifacts/

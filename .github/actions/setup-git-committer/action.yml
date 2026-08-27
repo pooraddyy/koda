@@ -1,0 +1,26 @@
+name: "Configure Koda Git Committer"
+description: "Configure a workflow-scoped Git identity and authenticated origin for controlled repository updates"
+inputs:
+  token:
+    description: "Repository token with the permissions required by the calling workflow"
+    required: true
+outputs:
+  token:
+    description: "The authenticated repository token for tools that require GH_TOKEN"
+    value: ${{ inputs.token }}
+runs:
+  using: "composite"
+  steps:
+    - name: Configure workflow identity
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+    - name: Clear checkout credentials
+      shell: bash
+      run: git config --local --unset-all http.https://github.com/.extraheader || true
+
+    - name: Configure authenticated origin
+      shell: bash
+      run: git remote set-url origin "https://x-access-token:${{ inputs.token }}@github.com/${{ github.repository }}"

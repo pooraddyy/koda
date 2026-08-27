@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "koda Architecture Ratchet Allowlist",
+  "description": "Baseline exception list for koda-owned domain architecture boundaries and state ratchets. Upstream-owned shared opencode files are exempt to prevent upstream merge conflicts. As koda legacy sites are refactored into clean Effect layers, decrement counts or remove entries to lock in progress.",
+  "rules": {
+    "koda-instance-state-singletons": {
+      "description": "Legacy InstanceState.make usages in koda-owned code (packages/opencode/src/koda/**, packages/opencode/src/koda-*/**). Target: encapsulate in scoped Effect Services in packages/core.",
+      "allowed": {
+        "packages/opencode/src/koda-sessions/koda-sessions.ts": { "count": 1, "owner": "session-runtime", "reason": "koda session coordination state" },
+        "packages/opencode/src/koda/background-process/index.ts": { "count": 1, "owner": "process-runtime", "reason": "Directory-keyed background process registry" }
+      }
+    },
+    "koda-database-constructors": {
+      "description": "Direct new Database() / new DatabaseSync() instantiations in koda-owned code. Target: all persistence routes through core Database.Service.",
+      "allowed": {
+        "packages/opencode/src/koda/session-export/sequence.ts": { "count": 1, "owner": "export-runtime", "reason": "Read-only offline export database reader" },
+        "packages/opencode/src/koda/session-export/worker/storage.ts": { "count": 1, "owner": "export-runtime", "reason": "Worker-thread offline export database handle" }
+      }
+    },
+    "koda-tool-process-env": {
+      "description": "Direct process.env reads in koda-owned tools. Target: pass configuration explicitly via Tool.Context or Env.Service.",
+      "allowed": {}
+    }
+  }
+}

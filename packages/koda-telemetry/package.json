@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@koda/koda-telemetry",
+  "version": "7.4.23",
+  "type": "module",
+  "license": "MIT",
+  "description": "Telemetry for koda CLI - PostHog analytics integration",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "build": "tsc",
+    "test": "bun test",
+    "test:ci": "mkdir -p .artifacts/unit && bun test --reporter=junit --reporter-outfile=.artifacts/unit/junit.xml"
+  },
+  "dependencies": {
+    "posthog-node": "4.4.0",
+    "@koda/koda-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  },
+  "peerDependencies": {}
+}

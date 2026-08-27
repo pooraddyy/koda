@@ -1,0 +1,51 @@
+{
+  "$schema": "https://v2-8-13.turborepo.dev/schema.json",
+  "globalEnv": ["CI", "koda_DISABLE_SHARE"],
+  "globalPassThroughEnv": ["CI", "koda_DISABLE_SHARE"],
+  "tasks": {
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "build": {
+      "dependsOn": [],
+      "outputs": ["dist/**"]
+    },
+    "@koda-code/cli#build": {
+      "dependsOn": ["@koda/sdk#build"],
+      "outputs": ["dist/**"]
+    },
+    "@koda-code/cli#test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "passThroughEnv": ["*"]
+    },
+    "test:ci": {
+      "outputs": [".artifacts/unit/junit.xml"],
+      "passThroughEnv": ["*"]
+    },
+    "@opencode-ai/core#test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@koda-code/cli#test:ci": {
+      "dependsOn": ["^build"],
+      "env": ["koda_TEST_PROFILE", "koda_TEST_SHARD"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.github/workflows/test.yml"],
+      "outputs": [".artifacts/unit/junit.xml"],
+      "passThroughEnv": ["*"]
+    },
+    "@koda-code/cli#test:httpapi": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["*"]
+    },
+    "@koda/koda-gateway#test:ci": {
+      "outputs": [".artifacts/unit/junit.xml"]
+    },
+    "@opencode-ai/core#test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    }
+  }
+}

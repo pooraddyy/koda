@@ -1,0 +1,34 @@
+name: beta
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  sync:
+    if: github.repository == 'pooraddyy/koda'
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6 # koda_change
+        with:
+          persist-credentials: false # koda_change
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Setup Git Committer
+        id: committer
+        uses: ./.github/actions/setup-git-committer
+        with:
+          token: ${{ github.token }}
+
+      - name: Sync beta branch
+        env:
+          GH_TOKEN: ${{ steps.committer.outputs.token }}
+        run: bun script/beta.ts

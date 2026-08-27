@@ -1,0 +1,89 @@
+name: "koda GitHub Action"
+description: "Run koda AI agent in GitHub Actions workflows"
+branding:
+  icon: "code"
+  color: "gray-dark"
+
+inputs:
+  model:
+    description: "Model to use"
+    required: true
+
+  agent:
+    description: "Agent to use. Must be a primary agent. Falls back to default_agent from config or 'build' if not found."
+    required: false
+
+  share:
+    description: "Share the koda session (defaults to true for public repos)"
+    required: false
+
+  prompt:
+    description: "Custom prompt to override the default prompt"
+    required: false
+
+  use_github_token:
+    description: "Use GITHUB_TOKEN directly instead of koda App token exchange. When true, skips OIDC and uses the GITHUB_TOKEN env var."
+    required: false
+    default: "false"
+
+  mentions:
+    description: "Comma-separated list of trigger phrases (case-insensitive). Defaults to '/koda,/kc'"
+    required: false
+
+  variant:
+    description: "Model variant for provider-specific reasoning effort (e.g., high, max, minimal)"
+    required: false
+
+  oidc_base_url:
+    description: "Base URL for OIDC token exchange API. Only required when running a custom GitHub App install. Defaults to https://api.koda.ai"
+    required: false
+
+  koda_api_key:
+    description: "koda API key for gateway authentication"
+    required: false
+
+  koda_org_id:
+    description: "koda organization ID"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get koda version
+      id: version
+      shell: bash
+      run: |
+        VERSION=$(curl -sf https://api.github.com/repos/pooraddyy/koda/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+        echo "version=${VERSION:-latest}" >> $GITHUB_OUTPUT
+
+    - name: Cache koda
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.koda/bin
+        key: koda-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.version }}
+
+    - name: Install koda
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash
+
+    - name: Add koda to PATH
+      shell: bash
+      run: echo "$HOME/.koda/bin" >> $GITHUB_PATH
+
+    - name: Run koda
+      shell: bash
+      id: run_koda
+      run: koda github run
+      env:
+        MODEL: ${{ inputs.model }}
+        AGENT: ${{ inputs.agent }}
+        SHARE: ${{ inputs.share }}
+        PROMPT: ${{ inputs.prompt }}
+        USE_GITHUB_TOKEN: ${{ inputs.use_github_token }}
+        MENTIONS: ${{ inputs.mentions }}
+        VARIANT: ${{ inputs.variant }}
+        OIDC_BASE_URL: ${{ inputs.oidc_base_url }}
+        koda_API_KEY: ${{ inputs.koda_api_key }}
+        koda_ORG_ID: ${{ inputs.koda_org_id }}
