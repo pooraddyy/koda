@@ -21,7 +21,7 @@ import { kodaToolRegistry } from "@/koda/tool/registry"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { kodaWatcher } from "@/koda/watcher"
 import { kodaSession } from "@/koda/session"
-import { Service as LifecycleHooks, node as LifecycleHooksNode } from "@/koda/hooks/service"
+import { defaultLayer as LifecycleHooksLayer, Service as LifecycleHooks, node as LifecycleHooksNode } from "@/koda/hooks/service"
 import { CollaborationCoordinator } from "@/koda/orchestration/service"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder" // koda_change
 
@@ -136,7 +136,7 @@ export namespace kodaBootstrap {
       MemoryService.layer,
       Bus.defaultLayer,
       kodaWatcher.defaultLayer,
-      LifecycleHooks.defaultLayer,
+      LifecycleHooksLayer,
       AppNodeBuilder.build(CollaborationCoordinator.node),
     ]),
   )

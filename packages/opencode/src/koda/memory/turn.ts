@@ -80,7 +80,12 @@ export namespace MemoryLifecycle {
             sessionID: evt.properties.sessionID,
             // A superseded turn handed off to a queued follow-up after draining
             // its step; for digest purposes it was cut short like an interrupt.
-            reason: evt.properties.reason === "superseded" ? "interrupted" : evt.properties.reason,
+            reason:
+              evt.properties.reason === "completed"
+                ? "completed"
+                : evt.properties.reason === "interrupted" || evt.properties.reason === "superseded"
+                  ? "interrupted"
+                  : "error",
             sessions: input.sessions,
             summary: input.summary,
             provider: input.provider,

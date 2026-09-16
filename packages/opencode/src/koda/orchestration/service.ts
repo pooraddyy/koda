@@ -1,8 +1,6 @@
 import { Database } from "@opencode-ai/core/database/database"
 import { CollaborationEventTable, CollaborationGraphTable, CollaborationNodeTable } from "@/koda/orchestration/sql"
 import {
-  CollaborationGraph,
-  CollaborationNode,
   GraphNodeState,
   GraphState,
   cancelGraph,
@@ -19,6 +17,7 @@ import {
   startGraph,
   startNode,
 } from "@/koda/orchestration/graph"
+import type { CollaborationGraph, CollaborationNode } from "@/koda/orchestration/graph"
 import { and, asc, eq } from "drizzle-orm"
 import { Context, Effect, Layer, Option, Schema, Semaphore } from "effect"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"

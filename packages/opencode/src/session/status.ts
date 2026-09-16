@@ -14,6 +14,7 @@ export type Info = SessionStatusEvent.Info
 
 export const Event = SessionStatusEvent
 export type RunStatusReason = SessionEvent.RunStatusReason
+type RunStatusData = Schema.Schema.Type<typeof SessionEvent.RunStatus.data>
 
 export type SetOptions = {
   readonly runID?: string
@@ -35,7 +36,7 @@ const runStatusType = `${SessionEvent.RunStatus.type}.%`
 const decodeRunStatus = Schema.decodeUnknownSync(SessionEvent.RunStatus.data)
 const activeStates = new Set<SessionEvent.RunStatusState>(["busy", "retrying", "offline"])
 
-const activeInfo = (status: SessionEvent.RunStatus) => {
+const activeInfo = (status: RunStatusData) => {
   if (status.state === "retrying") {
     return {
       type: "retry" as const,
@@ -95,7 +96,7 @@ export const layer = Layer.effect(
         .orderBy(asc(EventTable.seq))
         .all()
         .pipe(Effect.orDie)
-      const result = new Map<SessionID, SessionEvent.RunStatus>()
+      const result = new Map<SessionID, RunStatusData>()
       for (const row of rows) {
         const status = decodeRunStatus(row.data)
         result.set(status.sessionID, status)

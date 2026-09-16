@@ -40,13 +40,13 @@ const layer = Layer.effect(
       }
       const sessionID = SessionID.make(input.payload.sessionID)
       const snapshot = await Effect.runPromise(
-        peek(instance.directory, sessionID).pipe(Effect.catchAll(() => Effect.succeed(undefined))),
+        peek(instance.directory, sessionID).pipe(Effect.catch(() => Effect.succeed(undefined))),
       )
       if (!snapshot?.enabled) {
         throw new Error("Lifecycle hook skipped: enable Koda sandbox for the owning session")
       }
       return await Effect.runPromise(
-        runSandbox(
+        Effect.scoped(runSandbox(
           profile(instance, snapshot.mode, snapshot.writablePaths, snapshot.allowedHosts),
           Effect.gen(function* () {
             const prepared = yield* prepareCommand(
@@ -75,12 +75,12 @@ const layer = Layer.effect(
               catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
             })
           }),
-        ).pipe(Effect.provide(NodeServices.layer)),
+        )).pipe(Effect.provide(NodeServices.layer)),
       )
     }
 
     const load = Effect.fn("LifecycleHooks.load")(function* () {
-      const current = yield* config.get()
+      const current: Config.Info = yield* config.get()
       const configured = definitions(current)
       return yield* Effect.try({
         try: () => new HookEngine(configured, execute),

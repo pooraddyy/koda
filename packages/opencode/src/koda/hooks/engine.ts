@@ -33,7 +33,7 @@ export type HookExecutorResult = {
 export type HookExecutor = (input: HookExecutorInput) => Promise<HookExecutorResult>
 
 function eventsOf(hook: HookDefinition): readonly HookEvent[] {
-  return Array.isArray(hook.event) ? hook.event : [hook.event]
+  return typeof hook.event === "string" ? [hook.event] : hook.event
 }
 
 function globMatch(pattern: string | undefined, value: string) {
@@ -83,14 +83,14 @@ async function readLimited(stream: ReadableStream<Uint8Array> | null, maxBytes: 
 export async function spawnHookProcess(
   input: HookExecutorInput,
   command = input.command,
-  options?: { readonly cwd?: string; readonly env?: Readonly<Record<string, string>> },
+  options?: { readonly cwd?: string; readonly env?: Record<string, string> },
 ): Promise<HookExecutorResult> {
-  const child = Bun.spawn(command, {
+  const child = Bun.spawn([...command], {
     stdin: new Blob([input.stdin]),
     stdout: "pipe",
     stderr: "pipe",
     cwd: options?.cwd ?? input.cwd,
-    env: options?.env ?? input.env,
+    env: options?.env ?? { ...input.env },
   })
   const abort = () => child.kill()
   input.signal.addEventListener("abort", abort, { once: true })
