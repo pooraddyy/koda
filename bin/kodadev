@@ -7,6 +7,10 @@ export koda_DEV_REPO="$dir"
 # Otherwise forward args untouched so subcommands (run, dev-alias, ...) don't
 # collide with --project (only TUI/stats accept --project under yargs strict).
 first=
+termux=false
+if [[ -n "${TERMUX_VERSION:-}" || "${PREFIX:-}" == *"/com.termux/"* ]]; then
+  termux=true
+fi
 for a in "$@"; do
   case "$a" in
     --) break ;;
@@ -15,6 +19,9 @@ for a in "$@"; do
   esac
 done
 if [[ -z "$first" ]]; then
-  exec bun run --cwd "$dir/packages/opencode" --conditions=browser src/index.ts --project "$PWD" "$@"
+  if [[ "$termux" == true ]]; then
+    exec bun run --cwd "$dir/packages/opencode" --conditions=node src/index.ts --project "$PWD" --mini
+  fi
+  exec bun run --cwd "$dir/packages/opencode" --conditions=node src/index.ts --project "$PWD" "$@"
 fi
-exec bun run --cwd "$dir/packages/opencode" --conditions=browser src/index.ts "$@"
+exec bun run --cwd "$dir/packages/opencode" --conditions=node src/index.ts "$@"

@@ -2,6 +2,7 @@
 setlocal enabledelayedexpansion
 set "dir=%~dp0.."
 set "koda_DEV_REPO=%dir%"
+set "koda_CLIENT=cli"
 rem Find the first non-flag arg. If there isn't one, the user is launching the
 rem TUI, so point it at the caller's directory via --project. Otherwise
 rem forward untouched so subcommands don't collide with --project.
@@ -13,9 +14,9 @@ for %%a in (%*) do (
   )
 )
 if not defined first (
-  bun run --cwd "%dir%\packages\opencode" --conditions=browser src/index.ts --project "%CD%" %*
+  bun run --cwd "%dir%\packages\opencode" --conditions=node src/index.ts --project "%CD%" %*
 ) else (
-  bun run --cwd "%dir%\packages\opencode" --conditions=browser src/index.ts %*
+  bun run --cwd "%dir%\packages\opencode" --conditions=node src/index.ts %*
 )
 set "code=%ERRORLEVEL%"
 endlocal & exit /b %code%

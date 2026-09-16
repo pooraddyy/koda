@@ -268,6 +268,9 @@ install_launcher() {
 #!/usr/bin/env bash
 set -Eeuo pipefail
 export koda_CLIENT=cli
+if [[ -z "\${1:-}" && ( -n "\${TERMUX_VERSION:-}" || "\${PREFIX:-}" == *"/com.termux/"* ) ]]; then
+  exec "$bun_path" run --cwd "$install_root/source/packages/opencode" --conditions=node src/index.ts --project "\$PWD" --mini
+fi
 exec "$bun_path" run --cwd "$install_root/source/packages/opencode" --conditions=node src/index.ts "\$@"
 EOF
   chmod 755 "$bin_directory/koda"
