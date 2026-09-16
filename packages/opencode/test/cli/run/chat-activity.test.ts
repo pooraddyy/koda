@@ -8,7 +8,7 @@ describe("Koda chat activity", () => {
   })
 
   test("normalizes invalid and negative phrase indexes", () => {
-    expect(chatActivityLabel(-1)).toBe(CHAT_ACTIVITY_STAGES.at(-1))
+    expect(chatActivityLabel(-1)).toBe(CHAT_ACTIVITY_STAGES[CHAT_ACTIVITY_STAGES.length - 1])
     expect(chatActivityLabel(CHAT_ACTIVITY_STAGES.length + 1)).toBe(CHAT_ACTIVITY_STAGES[1])
     expect(chatActivityLabel(Number.NaN)).toBe(CHAT_ACTIVITY_STAGES[0])
   })

@@ -83,7 +83,7 @@ describe("session run budget", () => {
 
   test("accepts active assistant usage before persisted tool parts are available", () => {
     const state = RunBudget.make({ tokens: 10, cost: 2 })
-    const current = assistant("active", 4, 3, 1).info
+    const current = assistant("active", 4, 3, 1).info as SessionV1.Assistant
     expect(RunBudget.observe(state, current).usage).toEqual({ tokens: 7, cost: 1, tasks: 0 })
   })
 })

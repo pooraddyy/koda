@@ -1,4 +1,5 @@
 import type { Argv } from "yargs"
+import type { Effect } from "effect"
 import { cmd } from "@/cli/cmd/cmd"
 
 async function runService<A>(build: (Effect: any) => any): Promise<A> {
@@ -60,7 +61,7 @@ const ListCommand = cmd({
         service.list().pipe(Effect.map((graphs: any[]) => graphs.map(graphSummary))),
       ),
     )
-    print(result, Boolean(args.json))
+    print(result as readonly unknown[], Boolean(args.json))
   },
 })
 
@@ -93,7 +94,7 @@ const RecoverCommand = cmd({
     const { CollaborationCoordinator } = await import("@/koda/orchestration/service")
     const { graphSummary } = await import("@/koda/orchestration/graph")
     const result = await runService((_) => CollaborationCoordinator.Service.use((service: any) => service.recover()))
-    print(result.map(graphSummary), Boolean(args.json))
+    print((result as readonly unknown[]).map((graph) => graphSummary(graph as Parameters<typeof graphSummary>[0])), Boolean(args.json))
   },
 })
 
@@ -113,7 +114,7 @@ const CancelCommand = cmd({
             return Effect.gen(function* () {
               const runState = yield* SessionRunState.Service
               for (const node of value.value.nodes.values()) {
-                if (node.sessionID) yield* runState.cancel(SessionID.make(node.sessionID)).pipe(Effect.ignore)
+                if (node.sessionID) yield* (runState.cancel(SessionID.make(node.sessionID)) as Effect.Effect<void, never, never>)
               }
               return true
             })

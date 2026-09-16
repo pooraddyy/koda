@@ -443,13 +443,11 @@ describe("send_file tool", () => {
     const extra = kodaToolRegistry.extra(
       {
         recall: tool,
-        managerModels: tool,
         memory: tool,
         save: tool,
-        manager: tool,
         process: tool,
-        chart: tool,
         image: tool,
+        evolve: tool,
         notify: { id: "notify_user" } as Tool.Def,
         send: tool,
       },

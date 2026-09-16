@@ -57,10 +57,10 @@ describe("lifecycle hook engine", () => {
 
   it("lists trusted and mode metadata without exposing commands", () => {
     const engine = new HookEngine([
-      { id: "audit", event: "session.start", command: "printf secret", mode: "async", trusted: true },
+      { id: "audit", event: "session.start", command: "printf secret", mode: "async", matcher: "*", trusted: true },
     ])
     expect(engine.list()).toEqual([
-      { id: "audit", event: "session.start", mode: "async", onError: "warn", trusted: true, enabled: true },
+      { id: "audit", event: "session.start", mode: "async", matcher: "*", onError: "warn", trusted: true, enabled: true },
     ])
     expect(JSON.stringify(engine.list())).not.toContain("printf secret")
   })

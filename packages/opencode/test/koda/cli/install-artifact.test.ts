@@ -88,7 +88,6 @@ describe("npm install artifact behavior", () => {
             version: "1.0.0",
             bin: {
               koda: "./bin/koda",
-              koda: "./bin/koda",
             },
           },
           null,

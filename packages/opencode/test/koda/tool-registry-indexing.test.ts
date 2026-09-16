@@ -431,7 +431,7 @@ describe("koda tool registry indexing", () => {
     )
     const coordinator = Layer.succeed(
       CollaborationCoordinator.Service,
-      { recover: () => Effect.succeed([]) } as CollaborationCoordinator.Interface,
+      { recover: () => Effect.succeed([]) } as unknown as CollaborationCoordinator.Interface,
     )
     const indexing = spyOn(kodaIndexing, "init").mockRejectedValue(err)
     const warn = spyOn(logger, "warn").mockImplementation(() => {})

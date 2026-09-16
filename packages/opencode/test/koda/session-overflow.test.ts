@@ -10,13 +10,13 @@ import { isOverflow, usable } from "@/session/overflow"
 
 function cfg(compaction?: Config.Info["compaction"]): Config.Info {
   const config = Schema.decodeUnknownSync(Config.Info)({ compaction })
-  return {
+  return ({
     ...config,
     skills: config.skills && {
       paths: config.skills.paths && [...config.skills.paths],
       urls: config.skills.urls && [...config.skills.urls],
     },
-  }
+  } as unknown as Config.Info)
 }
 
 function model(opts: { context: number; output: number; input?: number }): Provider.Model {

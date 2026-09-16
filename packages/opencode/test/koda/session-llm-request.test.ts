@@ -43,6 +43,7 @@ const plugin: Plugin.Interface = {
   init: () => Effect.void,
   trigger: (_name, _input, output) => Effect.succeed(output),
   list: () => Effect.succeed([]),
+  status: () => Effect.succeed([]),
 }
 
 function agent(name: string): Agent.Info {

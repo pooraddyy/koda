@@ -492,7 +492,7 @@ noLLMServer.instance(
 
       const result = yield* prompt.loop({ sessionID: chat.id })
       expect(result.info.role).toBe("assistant")
-      if (result.info.role === "assistant") expect(result.info.finish).toBe("stop")
+      if (result.info.role === "assistant") expect((result.info as { finish?: string }).finish).toBe("stop")
     }),
   { config: cfg },
 )
@@ -911,7 +911,7 @@ it.instance(
       const terminal: Array<Record<string, unknown>> = []
       const budgetTerminal = yield* Deferred.make<void>()
       const unsub = yield* events.listen((event) => {
-        if (event.type === SessionEvent.RunStatus.type && event.data.sessionID === session.id) {
+        if (event.type === SessionEvent.RunStatus.type && (event.data as { sessionID?: string }).sessionID === session.id) {
           const data = event.data as Record<string, unknown>
           terminal.push(data)
           if (data.reason === "budget") return Deferred.succeed(budgetTerminal, undefined).pipe(Effect.ignore)
@@ -930,7 +930,7 @@ it.instance(
 
       const result = yield* prompt.loop({ sessionID: session.id })
       expect(result.info.role).toBe("assistant")
-      expect(result.info.finish).toBe("stop")
+      expect((result.info as { finish?: string }).finish).toBe("stop")
       expect(yield* llm.hits).toHaveLength(1)
       yield* Deferred.await(budgetTerminal).pipe(Effect.timeout("2 seconds"))
       expect(terminal.some((event) => event.state === "failed" && event.reason === "budget")).toBe(true)
@@ -1002,7 +1002,7 @@ it.instance("loop continues when finish is tool-calls", () =>
     expect(result.info.role).toBe("assistant")
     if (result.info.role === "assistant") {
       expect(result.parts.some((part) => part.type === "text" && part.text === "second")).toBe(true)
-      expect(result.info.finish).toBe("stop")
+      expect((result.info as { finish?: string }).finish).toBe("stop")
     }
   }),
 )
@@ -1069,7 +1069,7 @@ it.instance("loop continues when finish is stop but assistant has tool parts", (
     expect(result.info.role).toBe("assistant")
     if (result.info.role === "assistant") {
       expect(result.parts.some((part) => part.type === "text" && part.text === "second")).toBe(true)
-      expect(result.info.finish).toBe("stop")
+      expect((result.info as { finish?: string }).finish).toBe("stop")
     }
   }),
 )

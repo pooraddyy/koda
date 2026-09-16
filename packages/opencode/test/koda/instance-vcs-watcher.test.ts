@@ -36,17 +36,8 @@ afterAll(() => {
 const live = process.platform === "win32" ? it.live.skip : it.live
 
 describe("kodaWatcher.eager", () => {
-  test("skips eager location watchers for VS Code", () => {
-    expect(kodaWatcher.eager("vscode")).toBe(false)
-  })
-
-  test("skips eager location watchers for JetBrains", () => {
-    expect(kodaWatcher.eager("jetbrains")).toBe(false)
-  })
-
-  test("keeps eager location watchers for the standalone CLI", () => {
-    expect(kodaWatcher.eager("cli")).toBe(true)
-    expect(kodaWatcher.eager(undefined)).toBe(true)
+  test("keeps eager location watchers for the terminal runtime", () => {
+    expect(kodaWatcher.eager()).toBe(true)
   })
 })
 

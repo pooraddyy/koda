@@ -23,7 +23,6 @@ const UUID = "00000000-0000-4000-8000-000000000000"
 describe("presence context builders", () => {
   test("platformContext maps a platform to its presence context", () => {
     expect(platformContext("cli")).toBe("/presence/cli")
-    expect(platformContext("vscode")).toBe("/presence/vscode")
   })
 
   test("cliSessionContext prefixes the session id", () => {
@@ -203,7 +202,7 @@ describe("desiredContexts", () => {
   })
 
   test("inactive omits platform context but keeps session contexts", () => {
-    const ctx = desiredContexts("vscode", false, ["s1"])
+    const ctx = desiredContexts("cli", false, ["s1"])
     expect(ctx.size).toBe(1)
     expect(ctx.has("/presence/vscode")).toBe(false)
     expect(ctx.has("/presence/cli-session/s1")).toBe(true)

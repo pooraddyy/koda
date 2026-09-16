@@ -72,7 +72,7 @@ function decode(input: unknown): Config.Info {
       paths: config.skills.paths && [...config.skills.paths],
       urls: config.skills.urls && [...config.skills.urls],
     },
-  }
+  } as Config.Info
 }
 
 const cfg: Partial<Config.Info> = {

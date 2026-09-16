@@ -1,3 +1,4 @@
+import type { Argv } from "yargs"
 import { cmd } from "@/cli/cmd/cmd"
 import { EvolutionStore } from "@/koda/evolution/store"
 import { MemoryPaths } from "@koda/koda-memory/effect/paths"

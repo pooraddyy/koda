@@ -169,7 +169,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(Object.keys(result.mcp)).toHaveLength(0)
@@ -197,7 +196,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp).toHaveProperty("filesystem")
@@ -227,7 +225,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp).toHaveProperty("legacy")
@@ -255,7 +252,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp).toHaveProperty("valid")
@@ -289,7 +285,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp.myserver).toEqual({
@@ -316,7 +311,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp).toHaveProperty("enabled")
@@ -353,7 +347,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(result.mcp).toHaveProperty("filesystem")
@@ -392,7 +385,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(Object.keys(result.mcp)).toHaveLength(3)
@@ -421,7 +413,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(Object.keys(result.mcp)).toHaveLength(0)
@@ -445,7 +436,6 @@ describe("McpMigrator", () => {
 
       const result = await McpMigrator.migrate({
         projectDir: tmp.path,
-        skipGlobalPaths: true,
       })
 
       expect(Object.keys(result.mcp)).toHaveLength(0)
@@ -565,8 +555,7 @@ describe("McpMigrator", () => {
 
         const result = await McpMigrator.migrate({
           projectDir: tmp.path,
-          skipGlobalPaths: true,
-        })
+          })
 
         expect(result.mcp).toHaveProperty("local-mcp")
         expect(result.mcp["local-mcp"]).toEqual({
@@ -595,8 +584,7 @@ describe("McpMigrator", () => {
 
         const result = await McpMigrator.migrate({
           projectDir: tmp.path,
-          skipGlobalPaths: true,
-        })
+          })
 
         expect(result.mcp).toHaveProperty("sse-server")
         expect(result.mcp["sse-server"]).toEqual({
@@ -634,8 +622,7 @@ describe("McpMigrator", () => {
 
         const result = await McpMigrator.migrate({
           projectDir: tmp.path,
-          skipGlobalPaths: true,
-        })
+          })
 
         expect(Object.keys(result.mcp)).toHaveLength(3)
         expect(result.mcp.filesystem).toEqual({
@@ -677,8 +664,7 @@ describe("McpMigrator", () => {
 
         const result = await McpMigrator.migrate({
           projectDir: tmp.path,
-          skipGlobalPaths: true,
-        })
+          })
 
         expect(result.mcp).toHaveProperty("auth-api")
         expect(result.mcp["auth-api"]).toEqual({
@@ -716,8 +702,7 @@ describe("McpMigrator", () => {
 
         const result = await McpMigrator.migrate({
           projectDir: tmp.path,
-          skipGlobalPaths: true,
-        })
+          })
 
         expect(result.mcp).toHaveProperty("enabled")
         expect(result.mcp.enabled).toEqual({
