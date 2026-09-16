@@ -30,7 +30,6 @@
     "@koda-code/cli#test:ci": {
       "dependsOn": ["^build"],
       "env": ["koda_TEST_PROFILE", "koda_TEST_SHARD"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.github/workflows/test.yml"],
       "outputs": [".artifacts/unit/junit.xml"],
       "passThroughEnv": ["*"]
     },
