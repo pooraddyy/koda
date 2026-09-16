@@ -88,6 +88,6 @@ export const SelfEvolveTool = Tool.define<typeof Parameters, Metadata, never, "k
           }
         },
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }),
+      }).pipe(Effect.orDie),
   }),
 )

@@ -8,7 +8,7 @@ import type { SessionID, MessageID } from "../session/schema"
 import * as Truncate from "./truncate"
 import { Agent } from "@/agent/agent"
 import { format } from "@/koda/tool/tool" // koda_change
-import { Service as LifecycleHooks } from "@/koda/hooks/service"
+import { Service as LifecycleHooks, type Interface as LifecycleHooksInterface } from "@/koda/hooks/service"
 
 interface Metadata {
   [key: string]: any
@@ -103,7 +103,7 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
   init: Init<Parameters, Result>,
   truncate: Truncate.Interface,
   agents: Agent.Interface,
-  hooks: LifecycleHooks.Interface | undefined,
+  hooks: LifecycleHooksInterface | undefined,
 ) {
   return () =>
     Effect.gen(function* () {
@@ -142,11 +142,12 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
             })
             if (!gate.allowed) {
               const reason =
-                gate.outcomes.find((item) => item.decision === "block")?.error ?? "blocked by lifecycle hook"
+                gate.outcomes.find((item: (typeof gate.outcomes)[number]) => item.decision === "block")?.error ??
+                "blocked by lifecycle hook"
               return {
                 title: "Blocked by lifecycle hook",
                 output: `Tool ${id} was blocked by a lifecycle hook: ${reason}`,
-                metadata: { hookBlocked: true } as Result,
+                metadata: { hookBlocked: true } as unknown as Result,
               }
             }
           }

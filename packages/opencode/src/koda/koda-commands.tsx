@@ -216,7 +216,7 @@ function CollaborationModeSelect(props: { sync: any; dialog: any; toast: any; sd
   )
 }
 
-function CollaborationCancelSelect(props: { sdk: any; dialog: any; toast: any }) {
+function CollaborationCancelSelect(props: { sync: any; sdk: any; dialog: any; toast: any }) {
   const [graphs, setGraphs] = createSignal<CollaborationSummary[]>([])
   const [loading, setLoading] = createSignal(true)
 
@@ -318,7 +318,7 @@ function CollaborationMenu(props: { sync: any; dialog: any; toast: any; sdk: any
     }
     if (action === "cancel") {
       props.dialog.replace(() => (
-        <CollaborationCancelSelect sdk={props.sdk} dialog={props.dialog} toast={props.toast} />
+        <CollaborationCancelSelect sync={props.sync} sdk={props.sdk} dialog={props.dialog} toast={props.toast} />
       ))
       return
     }

@@ -26,7 +26,7 @@ function graphID(sessionID: string) {
     .slice(-20)}-${suffix}`.slice(0, 64)
 }
 
-export const CollaborateTool = Tool.define(
+export const CollaborateTool = Tool.define<typeof Parameters, Record<string, any>, any, "collaborate">(
   id,
   Effect.gen(function* () {
     const coordinator = yield* CollaborationCoordinator.Service
@@ -40,6 +40,7 @@ export const CollaborateTool = Tool.define(
         "Run a durable, dependency-aware Koda collaboration graph. Use focused for a small change, parallel for discovery plus implementation, review for audits, and thorough for a full implementation pipeline.",
       parameters: Parameters,
       execute: Effect.fn("CollaborateTool.execute")(function* (params, ctx) {
+        const input = params as Schema.Schema.Type<typeof Parameters>
         const cfg = yield* config.get()
         if (cfg.collaboration?.enabled !== true) {
           return {
@@ -48,12 +49,12 @@ export const CollaborateTool = Tool.define(
             metadata: { collaborationError: "disabled" },
           }
         }
-        const selectedMode = params.mode ?? cfg.collaboration?.mode ?? "focused"
-        const description = params.description ?? "Koda collaboration"
+        const selectedMode = input.mode ?? cfg.collaboration?.mode ?? "focused"
+        const description = input.description ?? "Koda collaboration"
         const mode = COLLABORATION_MODES[selectedMode]
         const maxConcurrency = Math.max(1, Math.min(16, cfg.collaboration?.max_concurrency ?? mode.maxConcurrency))
         const retries = Math.max(0, Math.min(2, cfg.collaboration?.retries ?? mode.retries))
-        const planned = planCollaboration(selectedMode, params.request)
+        const planned = planCollaboration(selectedMode, input.request)
         const maxNodes = cfg.collaboration?.max_nodes ?? mode.maxNodes
         if (planned.length > maxNodes) {
           return {
@@ -132,7 +133,7 @@ export const CollaborateTool = Tool.define(
         }
       }),
     }
-  }),
+  }) as any,
 )
 
 export * as CollaborationTool from "./tool"

@@ -338,7 +338,7 @@ export function createRoutes(
     // fibers (e.g. the ModelsDev background refresh) capture Effect's default stdout
     // logger and corrupt the TUI (#34730).
     Layer.provideMerge(Observability.layer),
-  )
+  ) as unknown as Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements>
 }
 
 // koda_change start - keep listener routes local while application services come from AppRuntime

@@ -241,13 +241,17 @@ export const kodaHandlers = HttpApiBuilder.group(InstanceHttpApi, "koda-workspac
     })
 
     const collaborationGraphs = Effect.fn("kodaHttpApi.collaborationGraphs")(function* () {
-      return (yield* coordinator.list()).map(graphSummary) satisfies (typeof CollaborationSummary.Type)[]
+      return (yield* coordinator.list().pipe(
+        Effect.catchTag("Koda.GraphStoreError", (error) => Effect.fail(new InvalidRequestError({ message: error.message }))),
+      )).map(graphSummary) satisfies (typeof CollaborationSummary.Type)[]
     })
 
     const collaborationSummary = Effect.fn("kodaHttpApi.collaborationSummary")(function* (ctx: {
       params: { graphID: string }
     }) {
-      const summary = yield* coordinator.summary(ctx.params.graphID)
+      const summary = yield* coordinator.summary(ctx.params.graphID).pipe(
+        Effect.catchTag("Koda.GraphStoreError", (error) => Effect.fail(new InvalidRequestError({ message: error.message }))),
+      )
       if (Option.isNone(summary)) return yield* new HttpApiError.NotFound({})
       return summary.value satisfies typeof CollaborationSummary.Type
     })
@@ -255,7 +259,9 @@ export const kodaHandlers = HttpApiBuilder.group(InstanceHttpApi, "koda-workspac
     const collaborationCancel = Effect.fn("kodaHttpApi.collaborationCancel")(function* (ctx: {
       params: { graphID: string }
     }) {
-      const cancelled = yield* coordinator.cancel(ctx.params.graphID)
+      const cancelled = yield* coordinator.cancel(ctx.params.graphID).pipe(
+        Effect.catchTag("Koda.GraphStoreError", (error) => Effect.fail(new InvalidRequestError({ message: error.message }))),
+      )
       if (Option.isNone(cancelled)) return yield* new HttpApiError.NotFound({})
       for (const node of cancelled.value.nodes.values()) {
         if (!node.sessionID) continue
@@ -265,7 +271,9 @@ export const kodaHandlers = HttpApiBuilder.group(InstanceHttpApi, "koda-workspac
     })
 
     const collaborationRecover = Effect.fn("kodaHttpApi.collaborationRecover")(function* () {
-      return (yield* coordinator.recover()).map(graphSummary) satisfies (typeof CollaborationSummary.Type)[]
+      return (yield* coordinator.recover().pipe(
+        Effect.catchTag("Koda.GraphStoreError", (error) => Effect.fail(new InvalidRequestError({ message: error.message }))),
+      )).map(graphSummary) satisfies (typeof CollaborationSummary.Type)[]
     })
 
     const hookList = Effect.fn("kodaHttpApi.hooks")(function* () {

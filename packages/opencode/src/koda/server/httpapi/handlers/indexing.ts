@@ -2,15 +2,18 @@ import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { EffectBridge } from "@/effect/bridge"
 import { InstanceHttpApi } from "@/server/routes/instance/httpapi/api"
+import { Config } from "@/config/config"
 
 export const indexingHandlers = HttpApiBuilder.group(InstanceHttpApi, "indexing", (handlers) =>
   Effect.gen(function* () {
     const mod = yield* Effect.promise(() => import("@/koda/indexing"))
+    const config = yield* Config.Service
     const status = Effect.fn("IndexingHttpApi.status")(function* () {
       return yield* EffectBridge.fromPromise(() => mod.kodaIndexing.current())
     })
     const consent = Effect.fn("IndexingHttpApi.consent")(function* (ctx: { payload: { enabled: boolean } }) {
-      yield* EffectBridge.fromPromise(() => mod.kodaIndexing.setConsent(ctx.payload.enabled))
+      const current = yield* config.get()
+      yield* config.update({ ...current, indexing: { ...current.indexing, enabled: ctx.payload.enabled } })
       return yield* EffectBridge.fromPromise(() => mod.kodaIndexing.current())
     })
     const models = Effect.fn("IndexingHttpApi.models")(function* () {

@@ -424,7 +424,9 @@ const layer = Layer.effect(
   }),
 )
 
-export const defaultLayer: Layer.Layer<Service> = Layer.suspend(() => AppNodeBuilder.build(node)) // koda_change - build from the LayerNode graph
+export const defaultLayer: Layer.Layer<Service> = Layer.suspend(
+  () => AppNodeBuilder.build(node) as unknown as Layer.Layer<Service, never, never>,
+) // koda_change - build from the LayerNode graph
 
 function isZodType(value: unknown): value is z.ZodType {
   return typeof value === "object" && value !== null && "_zod" in value
@@ -541,7 +543,7 @@ export const node = LayerNode.suspend(() =>
       kodaSessions.node,
       LifecycleHooksNode,
       CollaborationCoordinator.node,
-    ],
+    ] as any,
   }),
 )
 // koda_change end

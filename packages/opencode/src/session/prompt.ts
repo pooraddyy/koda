@@ -1817,7 +1817,7 @@ export const layer = Layer.effect(
           const persistedBudgetMessage = (yield* sessions.messages({ sessionID })).find(
             (item) => item.info.id === handle.message.id,
           )
-          const currentBudget = kodaRunBudget.observe(runBudget, persistedBudgetMessage ?? handle.message)
+          const currentBudget = kodaRunBudget.observe(runBudget!, persistedBudgetMessage ?? handle.message)
           if (currentBudget.exceeded) {
             const budgetError = new NamedError.Unknown({
               message: kodaRunBudget.describe(currentBudget.exceeded),
@@ -2516,7 +2516,9 @@ export const layer = Layer.effect(
   }),
 )
 
-export const defaultLayer: Layer.Layer<Service> = Layer.suspend(() => AppNodeBuilder.build(node)) // koda_change - build from the LayerNode graph
+export const defaultLayer: Layer.Layer<Service> = Layer.suspend(
+  () => AppNodeBuilder.build(node) as unknown as Layer.Layer<Service, never, never>,
+) // koda_change - build from the LayerNode graph
 
 const ModelRef = Schema.Struct({
   providerID: ProviderV2.ID,
