@@ -374,6 +374,9 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
       "session.next.retried": () => Effect.void,
       "session.next.compaction.started": () => Effect.void,
       "session.next.compaction.delta": () => Effect.void,
+      "session.next.run.status": () => Effect.void,
+      "session.next.delegation.started": () => Effect.void,
+      "session.next.delegation.finished": () => Effect.void,
       "session.next.compaction.ended": (event) => {
         if (event.data.messageID === undefined || event.data.reason === undefined) return Effect.void // koda_change
         return adapter.appendMessage(

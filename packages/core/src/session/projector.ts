@@ -17,6 +17,7 @@ import { SessionContextEpoch } from "./context-epoch"
 import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
 import type { DeepMutable } from "../schema"
 import * as PromptCompat from "../koda/session/prompt-promoted" // koda_change - released replay key
+import type { Definition, Payload } from "@opencode-ai/schema/event"
 
 type DatabaseService = Database.Interface["db"]
 
@@ -232,7 +233,11 @@ const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const events = yield* EventV2.Service
     const { db } = yield* Database.Service
-    yield* events.project(SessionV1.Event.Created, (event) =>
+    const project = <D extends Definition>(
+      definition: D,
+      projector: (event: Payload<D>) => Effect.Effect<void, unknown, unknown>,
+    ) => events.project(definition, projector as any)
+    yield* project(SessionV1.Event.Created, (event) =>
       Effect.gen(function* () {
         const stored = yield* db
           .insert(SessionTable)
@@ -252,7 +257,7 @@ const layer = Layer.effectDiscard(
         }
       }),
     )
-    yield* events.project(SessionV1.Event.Updated, (event) =>
+    yield* project(SessionV1.Event.Updated, (event) =>
       db
         .update(SessionTable)
         .set(sessionRow(event.data.info))
@@ -260,7 +265,7 @@ const layer = Layer.effectDiscard(
         .run()
         .pipe(Effect.orDie),
     )
-    yield* events.project(SessionEvent.Moved, (event) =>
+    yield* project(SessionEvent.Moved, (event) =>
       Effect.gen(function* () {
         yield* db
           .update(SessionTable)
@@ -276,10 +281,10 @@ const layer = Layer.effectDiscard(
         yield* SessionContextEpoch.reset(db, event.data.sessionID)
       }),
     )
-    yield* events.project(SessionV1.Event.Deleted, (event) =>
+    yield* project(SessionV1.Event.Deleted, (event) =>
       db.delete(SessionTable).where(eq(SessionTable.id, event.data.sessionID)).run().pipe(Effect.orDie),
     )
-    yield* events.project(SessionV1.Event.MessageUpdated, (event) =>
+    yield* project(SessionV1.Event.MessageUpdated, (event) =>
       Effect.gen(function* () {
         const time_created = event.data.info.time.created
         const id = event.data.info.id
@@ -293,7 +298,7 @@ const layer = Layer.effectDiscard(
           .pipe(Effect.orDie)
       }),
     )
-    yield* events.project(SessionV1.Event.MessageRemoved, (event) =>
+    yield* project(SessionV1.Event.MessageRemoved, (event) =>
       Effect.gen(function* () {
         const rows = yield* db
           .select()
@@ -312,7 +317,7 @@ const layer = Layer.effectDiscard(
           .pipe(Effect.orDie)
       }),
     )
-    yield* events.project(SessionV1.Event.PartRemoved, (event) =>
+    yield* project(SessionV1.Event.PartRemoved, (event) =>
       Effect.gen(function* () {
         const row = yield* db
           .select()
@@ -329,7 +334,7 @@ const layer = Layer.effectDiscard(
           .pipe(Effect.orDie)
       }),
     )
-    yield* events.project(SessionV1.Event.PartUpdated, (event) =>
+    yield* project(SessionV1.Event.PartUpdated, (event) =>
       Effect.gen(function* () {
         const id = event.data.part.id
         const messageID = event.data.part.messageID
@@ -348,7 +353,7 @@ const layer = Layer.effectDiscard(
         if (next) yield* applyUsage(db, sessionID, next)
       }),
     )
-    yield* events.project(SessionEvent.AgentSwitched, (event) =>
+    yield* project(SessionEvent.AgentSwitched, (event) =>
       db
         .update(SessionTable)
         .set({ agent: event.data.agent, time_updated: DateTime.toEpochMillis(event.data.timestamp) })
@@ -356,7 +361,7 @@ const layer = Layer.effectDiscard(
         .run()
         .pipe(Effect.orDie, Effect.andThen(run(db, event))),
     )
-    yield* events.project(SessionEvent.ModelSwitched, (event) =>
+    yield* project(SessionEvent.ModelSwitched, (event) =>
       Effect.gen(function* () {
         yield* db
           .update(SessionTable)
@@ -367,7 +372,7 @@ const layer = Layer.effectDiscard(
         yield* run(db, event)
       }),
     )
-    yield* events.project(SessionEvent.Prompted, (event) =>
+    yield* project(SessionEvent.Prompted, (event) =>
       Effect.gen(function* () {
         if (event.durable === undefined) return yield* Effect.die("Durable Session event is missing aggregate sequence")
         yield* SessionInput.projectPrompted(db, {
@@ -381,7 +386,7 @@ const layer = Layer.effectDiscard(
         yield* run(db, event)
       }),
     )
-    yield* events.project(SessionEvent.PromptAdmitted, (event) =>
+    yield* project(SessionEvent.PromptAdmitted, (event) =>
       Effect.gen(function* () {
         if (event.durable === undefined) return yield* Effect.die("Durable Session event is missing aggregate sequence")
         yield* SessionInput.projectAdmitted(db, {
@@ -394,27 +399,27 @@ const layer = Layer.effectDiscard(
         })
       }),
     )
-    yield* events.project(PromptCompat.definition, (event) => PromptCompat.project(db, event, (next) => run(db, next))) // koda_change - replay released two-step promotions
-    yield* events.project(SessionEvent.ContextUpdated, (event) => run(db, event))
-    yield* events.project(SessionEvent.Synthetic, (event) => run(db, event))
-    yield* events.project(SessionEvent.Shell.Started, (event) => run(db, event))
-    yield* events.project(SessionEvent.Shell.Ended, (event) => run(db, event))
-    yield* events.project(SessionEvent.Step.Started, (event) => run(db, event))
-    yield* events.project(SessionEvent.Step.Ended, (event) => run(db, event))
-    yield* events.project(SessionEvent.Step.Failed, (event) => run(db, event))
-    yield* events.project(SessionEvent.Text.Started, (event) => run(db, event))
-    yield* events.project(SessionEvent.Text.Ended, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Input.Started, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Input.Ended, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Called, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Progress, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Success, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Failed, (event) => run(db, event))
-    yield* events.project(SessionEvent.Reasoning.Started, (event) => run(db, event))
-    yield* events.project(SessionEvent.Reasoning.Ended, (event) => run(db, event))
-    // yield* events.project(SessionEvent.Retried, (event) => run(db, event))
-    yield* events.project(SessionEvent.Compaction.Ended, (event) => run(db, event))
-    yield* events.project(SessionEvent.RevertEvent.Staged, (event) =>
+    yield* project(PromptCompat.definition, (event) => PromptCompat.project(db, event, (next) => run(db, next))) // koda_change - replay released two-step promotions
+    yield* project(SessionEvent.ContextUpdated, (event) => run(db, event))
+    yield* project(SessionEvent.Synthetic, (event) => run(db, event))
+    yield* project(SessionEvent.Shell.Started, (event) => run(db, event))
+    yield* project(SessionEvent.Shell.Ended, (event) => run(db, event))
+    yield* project(SessionEvent.Step.Started, (event) => run(db, event))
+    yield* project(SessionEvent.Step.Ended, (event) => run(db, event))
+    yield* project(SessionEvent.Step.Failed, (event) => run(db, event))
+    yield* project(SessionEvent.Text.Started, (event) => run(db, event))
+    yield* project(SessionEvent.Text.Ended, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Input.Started, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Input.Ended, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Called, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Progress, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Success, (event) => run(db, event))
+    yield* project(SessionEvent.Tool.Failed, (event) => run(db, event))
+    yield* project(SessionEvent.Reasoning.Started, (event) => run(db, event))
+    yield* project(SessionEvent.Reasoning.Ended, (event) => run(db, event))
+    // yield* project(SessionEvent.Retried, (event) => run(db, event))
+    yield* project(SessionEvent.Compaction.Ended, (event) => run(db, event))
+    yield* project(SessionEvent.RevertEvent.Staged, (event) =>
       db
         .update(SessionTable)
         .set({
@@ -425,7 +430,7 @@ const layer = Layer.effectDiscard(
         .run()
         .pipe(Effect.orDie, Effect.asVoid),
     )
-    yield* events.project(SessionEvent.RevertEvent.Cleared, (event) =>
+    yield* project(SessionEvent.RevertEvent.Cleared, (event) =>
       db
         .update(SessionTable)
         .set({ revert: null, time_updated: DateTime.toEpochMillis(event.data.timestamp) })
@@ -433,7 +438,7 @@ const layer = Layer.effectDiscard(
         .run()
         .pipe(Effect.orDie, Effect.asVoid),
     )
-    yield* events.project(SessionEvent.RevertEvent.Committed, (event) =>
+    yield* project(SessionEvent.RevertEvent.Committed, (event) =>
       Effect.gen(function* () {
         const boundary = yield* db
           .select({ seq: SessionMessageTable.seq })
