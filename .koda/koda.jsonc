@@ -1,7 +1,7 @@
 {
   "$schema": "https://app.koda.ai/config.json",
   // "enterprise": {
-  //   "url": "https://enterprise.dev.opencode.ai",
+  //   "url": "https://enterprise.dev.koda.ai",
   // },
   "provider": {
     "koda": {
