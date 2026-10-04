@@ -144,9 +144,10 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
 
     const upgradeCurl = Effect.fnUntraced(
       function* (target: string) {
-        // Private repo: install script is fetched from GitHub with a token.
+        // Repo is public: install script is fetched from GitHub raw. A token
+        // in GITHUB_TOKEN is used when present (helps with API rate limits).
         const githubToken = process.env["GITHUB_TOKEN"]
-        const installRequest = HttpClientRequest.get("https://raw.githubusercontent.com/pooraddyy/koda/dev/install").pipe(
+        const installRequest = HttpClientRequest.get("https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh").pipe(
           githubToken ? HttpClientRequest.setHeaders({ Authorization: `Bearer ${githubToken}` }) : (req) => req,
         )
         const response = yield* httpOk.execute(installRequest)
