@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { openUrl } from "@opencode-ai/core/open"
+import { openUrl } from "@koda-ai/core/open"
 
 describe("openUrl", () => {
   test("rejects values that are not URLs", async () => {

@@ -6,9 +6,9 @@
       "name": "opencode",
       "dependencies": {
         "@aws-sdk/client-s3": "3.933.0",
-        "@opencode-ai/plugin": "workspace:*",
-        "@opencode-ai/script": "workspace:*",
-        "@opencode-ai/sdk": "workspace:*",
+        "@koda-ai/plugin": "workspace:*",
+        "@koda-ai/script": "workspace:*",
+        "@koda-ai/sdk": "workspace:*",
         "heap-snapshot-toolkit": "1.1.3",
         "typescript": "catalog:",
       },
@@ -27,7 +27,7 @@
       },
     },
     "packages/codemode": {
-      "name": "@opencode-ai/codemode",
+      "name": "@koda-ai/codemode",
       "version": "1.18.34",
       "dependencies": {
         "acorn": "8.15.0",
@@ -41,10 +41,10 @@
       },
     },
     "packages/core": {
-      "name": "@opencode-ai/core",
+      "name": "@koda-ai/core",
       "version": "1.18.34",
       "bin": {
-        "opencode": "./bin/opencode",
+        "koda": "./bin/koda",
       },
       "dependencies": {
         "@ai-sdk/alibaba": "1.0.17",
@@ -72,14 +72,14 @@
         "@effect/platform-node": "catalog:",
         "@effect/sql-sqlite-bun": "catalog:",
         "@ff-labs/fff-bun": "0.9.4",
+        "@koda-ai/effect-drizzle-sqlite": "workspace:*",
+        "@koda-ai/effect-sqlite-node": "workspace:*",
+        "@koda-ai/llm": "workspace:*",
+        "@koda-ai/plugin": "workspace:*",
+        "@koda-ai/schema": "workspace:*",
         "@lydell/node-pty": "catalog:",
         "@npmcli/arborist": "9.4.0",
         "@npmcli/config": "10.8.1",
-        "@opencode-ai/effect-drizzle-sqlite": "workspace:*",
-        "@opencode-ai/effect-sqlite-node": "workspace:*",
-        "@opencode-ai/llm": "workspace:*",
-        "@opencode-ai/plugin": "workspace:*",
-        "@opencode-ai/schema": "workspace:*",
         "@openrouter/ai-sdk-provider": "2.9.0",
         "@opentelemetry/api": "1.9.0",
         "@opentelemetry/context-async-hooks": "2.6.1",
@@ -114,7 +114,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@opencode-ai/http-recorder": "workspace:*",
+        "@koda-ai/http-recorder": "workspace:*",
         "@parcel/watcher-darwin-arm64": "2.5.1",
         "@parcel/watcher-darwin-x64": "2.5.1",
         "@parcel/watcher-linux-arm64-glibc": "2.5.1",
@@ -136,7 +136,7 @@
       },
     },
     "packages/effect-drizzle-sqlite": {
-      "name": "@opencode-ai/effect-drizzle-sqlite",
+      "name": "@koda-ai/effect-drizzle-sqlite",
       "version": "1.18.34",
       "dependencies": {
         "drizzle-orm": "catalog:",
@@ -150,7 +150,7 @@
       },
     },
     "packages/effect-sqlite-node": {
-      "name": "@opencode-ai/effect-sqlite-node",
+      "name": "@koda-ai/effect-sqlite-node",
       "version": "1.18.34",
       "dependencies": {
         "effect": "catalog:",
@@ -162,7 +162,7 @@
       },
     },
     "packages/http-recorder": {
-      "name": "@opencode-ai/http-recorder",
+      "name": "@koda-ai/http-recorder",
       "version": "1.18.34",
       "dependencies": {
         "@effect/platform-node": "4.0.0-beta.83",
@@ -180,30 +180,11 @@
         "effect": "4.0.0-beta.83",
       },
     },
-    "packages/llm": {
-      "name": "@opencode-ai/llm",
-      "version": "1.18.34",
-      "dependencies": {
-        "@opencode-ai/schema": "workspace:*",
-        "@smithy/eventstream-codec": "4.2.14",
-        "@smithy/util-utf8": "4.2.2",
-        "aws4fetch": "1.0.20",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@clack/prompts": "1.0.0-alpha.1",
-        "@effect/platform-node": "catalog:",
-        "@opencode-ai/http-recorder": "workspace:*",
-        "@tsconfig/bun": "catalog:",
-        "@types/bun": "catalog:",
-        "@typescript/native-preview": "catalog:",
-      },
-    },
-    "packages/opencode": {
-      "name": "opencode",
+    "packages/koda": {
+      "name": "koda",
       "version": "1.18.34",
       "bin": {
-        "opencode": "./bin/opencode",
+        "koda": "./bin/koda",
       },
       "dependencies": {
         "@actions/core": "1.11.1",
@@ -234,19 +215,19 @@
         "@effect/platform-node": "catalog:",
         "@ff-labs/fff-bun": "0.9.4",
         "@gitlab/opencode-gitlab-auth": "1.3.3",
+        "@koda-ai/codemode": "workspace:*",
+        "@koda-ai/llm": "workspace:*",
+        "@koda-ai/plugin": "workspace:*",
+        "@koda-ai/protocol": "workspace:*",
+        "@koda-ai/schema": "workspace:*",
+        "@koda-ai/script": "workspace:*",
+        "@koda-ai/sdk": "workspace:*",
+        "@koda-ai/server": "workspace:*",
+        "@koda-ai/tui": "workspace:*",
         "@modelcontextprotocol/sdk": "1.29.0",
         "@octokit/graphql": "9.0.2",
         "@octokit/rest": "catalog:",
         "@openauthjs/openauth": "catalog:",
-        "@opencode-ai/codemode": "workspace:*",
-        "@opencode-ai/llm": "workspace:*",
-        "@opencode-ai/plugin": "workspace:*",
-        "@opencode-ai/protocol": "workspace:*",
-        "@opencode-ai/schema": "workspace:*",
-        "@opencode-ai/script": "workspace:*",
-        "@opencode-ai/sdk": "workspace:*",
-        "@opencode-ai/server": "workspace:*",
-        "@opencode-ai/tui": "workspace:*",
         "@openrouter/ai-sdk-provider": "2.9.0",
         "@opentelemetry/api": "1.9.0",
         "@opentelemetry/context-async-hooks": "2.6.1",
@@ -307,10 +288,10 @@
       },
       "devDependencies": {
         "@babel/core": "7.28.4",
+        "@koda-ai/core": "workspace:*",
+        "@koda-ai/http-recorder": "workspace:*",
+        "@koda-ai/script": "workspace:*",
         "@octokit/webhooks-types": "7.6.1",
-        "@opencode-ai/core": "workspace:*",
-        "@opencode-ai/http-recorder": "workspace:*",
-        "@opencode-ai/script": "workspace:*",
         "@standard-schema/spec": "1.0.0",
         "@tsconfig/bun": "catalog:",
         "@types/babel__core": "7.20.5",
@@ -329,9 +310,56 @@
         "why-is-node-running": "3.2.2",
       },
     },
+    "packages/llm": {
+      "name": "@koda-ai/llm",
+      "version": "1.18.34",
+      "dependencies": {
+        "@koda-ai/schema": "workspace:*",
+        "@smithy/eventstream-codec": "4.2.14",
+        "@smithy/util-utf8": "4.2.2",
+        "aws4fetch": "1.0.20",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@clack/prompts": "1.0.0-alpha.1",
+        "@effect/platform-node": "catalog:",
+        "@koda-ai/http-recorder": "workspace:*",
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "packages/plugin": {
+      "name": "@koda-ai/plugin",
+      "version": "1.18.34",
+      "dependencies": {
+        "@ai-sdk/provider": "3.0.8",
+        "@koda-ai/sdk": "workspace:*",
+        "effect": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@opentui/core": "catalog:",
+        "@opentui/keymap": "catalog:",
+        "@opentui/solid": "catalog:",
+        "@tsconfig/node22": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "@opentui/core": ">=0.4.5",
+        "@opentui/keymap": ">=0.4.5",
+        "@opentui/solid": ">=0.4.5",
+      },
+      "optionalPeers": [
+        "@opentui/core",
+        "@opentui/keymap",
+        "@opentui/solid",
+      ],
+    },
     "packages/plugin": {
       "name": "@opencode-ai/plugin",
-      "version": "1.18.34",
       "dependencies": {
         "@ai-sdk/provider": "3.0.8",
         "@opencode-ai/sdk": "workspace:*",
@@ -359,9 +387,9 @@
       ],
     },
     "packages/protocol": {
-      "name": "@opencode-ai/protocol",
+      "name": "@koda-ai/protocol",
       "dependencies": {
-        "@opencode-ai/schema": "workspace:*",
+        "@koda-ai/schema": "workspace:*",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -371,7 +399,7 @@
       },
     },
     "packages/schema": {
-      "name": "@opencode-ai/schema",
+      "name": "@koda-ai/schema",
       "dependencies": {
         "effect": "catalog:",
       },
@@ -382,7 +410,7 @@
       },
     },
     "packages/script": {
-      "name": "@opencode-ai/script",
+      "name": "@koda-ai/script",
       "dependencies": {
         "semver": "^7.6.3",
       },
@@ -392,7 +420,7 @@
       },
     },
     "packages/sdk/js": {
-      "name": "@opencode-ai/sdk",
+      "name": "@koda-ai/sdk",
       "version": "1.18.34",
       "dependencies": {
         "cross-spawn": "catalog:",
@@ -406,12 +434,26 @@
         "typescript": "catalog:",
       },
     },
+    "packages/sdk/js": {
+      "name": "@opencode-ai/sdk",
+      "dependencies": {
+        "cross-spawn": "catalog:",
+      },
+      "devDependencies": {
+        "@hey-api/openapi-ts": "0.90.10",
+        "@tsconfig/node22": "catalog:",
+        "@types/cross-spawn": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/server": {
-      "name": "@opencode-ai/server",
+      "name": "@koda-ai/server",
       "version": "1.18.34",
       "dependencies": {
-        "@opencode-ai/core": "workspace:*",
-        "@opencode-ai/protocol": "workspace:*",
+        "@koda-ai/core": "workspace:*",
+        "@koda-ai/protocol": "workspace:*",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -422,13 +464,13 @@
       },
     },
     "packages/tui": {
-      "name": "@opencode-ai/tui",
+      "name": "@koda-ai/tui",
       "version": "1.18.34",
       "dependencies": {
-        "@opencode-ai/core": "workspace:*",
-        "@opencode-ai/plugin": "workspace:*",
-        "@opencode-ai/sdk": "workspace:*",
-        "@opencode-ai/ui": "workspace:*",
+        "@koda-ai/core": "workspace:*",
+        "@koda-ai/plugin": "workspace:*",
+        "@koda-ai/sdk": "workspace:*",
+        "@koda-ai/ui": "workspace:*",
         "@opentui/core": "catalog:",
         "@opentui/keymap": "catalog:",
         "@opentui/solid": "catalog:",
@@ -448,7 +490,7 @@
       },
     },
     "packages/ui": {
-      "name": "@opencode-ai/ui",
+      "name": "@koda-ai/ui",
       "version": "1.18.34",
       "dependencies": {
         "@kobalte/core": "catalog:",
@@ -980,6 +1022,34 @@
 
     "@kobalte/utils": ["@kobalte/utils@0.9.1", "", { "dependencies": { "@solid-primitives/event-listener": "^2.2.14", "@solid-primitives/keyed": "^1.2.0", "@solid-primitives/map": "^0.4.7", "@solid-primitives/media": "^2.2.4", "@solid-primitives/props": "^3.1.8", "@solid-primitives/refs": "^1.0.5", "@solid-primitives/utils": "^6.2.1" }, "peerDependencies": { "solid-js": "^1.8.8" } }, "sha512-eeU60A3kprIiBDAfv9gUJX1tXGLuZiKMajUfSQURAF2pk4ZoMYiqIzmrMBvzcxP39xnYttgTyQEVLwiTZnrV4w=="],
 
+    "@koda-ai/codemode": ["@koda-ai/codemode@workspace:packages/codemode"],
+
+    "@koda-ai/core": ["@koda-ai/core@workspace:packages/core"],
+
+    "@koda-ai/effect-drizzle-sqlite": ["@koda-ai/effect-drizzle-sqlite@workspace:packages/effect-drizzle-sqlite"],
+
+    "@koda-ai/effect-sqlite-node": ["@koda-ai/effect-sqlite-node@workspace:packages/effect-sqlite-node"],
+
+    "@koda-ai/http-recorder": ["@koda-ai/http-recorder@workspace:packages/http-recorder"],
+
+    "@koda-ai/llm": ["@koda-ai/llm@workspace:packages/llm"],
+
+    "@koda-ai/plugin": ["@koda-ai/plugin@workspace:packages/plugin"],
+
+    "@koda-ai/protocol": ["@koda-ai/protocol@workspace:packages/protocol"],
+
+    "@koda-ai/schema": ["@koda-ai/schema@workspace:packages/schema"],
+
+    "@koda-ai/script": ["@koda-ai/script@workspace:packages/script"],
+
+    "@koda-ai/sdk": ["@koda-ai/sdk@workspace:packages/sdk/js"],
+
+    "@koda-ai/server": ["@koda-ai/server@workspace:packages/server"],
+
+    "@koda-ai/tui": ["@koda-ai/tui@workspace:packages/tui"],
+
+    "@koda-ai/ui": ["@koda-ai/ui@workspace:packages/ui"],
+
     "@leichtgewicht/ip-codec": ["@leichtgewicht/ip-codec@2.0.5", "", {}, "sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw=="],
 
     "@lukeed/ms": ["@lukeed/ms@2.0.2", "", {}, "sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA=="],
@@ -1078,33 +1148,9 @@
 
     "@openauthjs/openauth": ["@openauthjs/openauth@0.0.0-20250322224806", "", { "dependencies": { "@standard-schema/spec": "1.0.0-beta.3", "aws4fetch": "1.0.20", "jose": "5.9.6" }, "peerDependencies": { "arctic": "^2.2.2", "hono": "^4.0.0" } }, "sha512-p5IWSRXvABcwocH2dNI0w8c1QJelIOFulwhKk+aLLFfUbs8u1pr7kQbYe8yCSM2+bcLHiwbogpUQc2ovrGwCuw=="],
 
-    "@opencode-ai/codemode": ["@opencode-ai/codemode@workspace:packages/codemode"],
-
-    "@opencode-ai/core": ["@opencode-ai/core@workspace:packages/core"],
-
-    "@opencode-ai/effect-drizzle-sqlite": ["@opencode-ai/effect-drizzle-sqlite@workspace:packages/effect-drizzle-sqlite"],
-
-    "@opencode-ai/effect-sqlite-node": ["@opencode-ai/effect-sqlite-node@workspace:packages/effect-sqlite-node"],
-
-    "@opencode-ai/http-recorder": ["@opencode-ai/http-recorder@workspace:packages/http-recorder"],
-
-    "@opencode-ai/llm": ["@opencode-ai/llm@workspace:packages/llm"],
-
     "@opencode-ai/plugin": ["@opencode-ai/plugin@workspace:packages/plugin"],
 
-    "@opencode-ai/protocol": ["@opencode-ai/protocol@workspace:packages/protocol"],
-
-    "@opencode-ai/schema": ["@opencode-ai/schema@workspace:packages/schema"],
-
-    "@opencode-ai/script": ["@opencode-ai/script@workspace:packages/script"],
-
     "@opencode-ai/sdk": ["@opencode-ai/sdk@workspace:packages/sdk/js"],
-
-    "@opencode-ai/server": ["@opencode-ai/server@workspace:packages/server"],
-
-    "@opencode-ai/tui": ["@opencode-ai/tui@workspace:packages/tui"],
-
-    "@opencode-ai/ui": ["@opencode-ai/ui@workspace:packages/ui"],
 
     "@openrouter/ai-sdk-provider": ["@openrouter/ai-sdk-provider@2.9.0", "", { "peerDependencies": { "ai": "^6.0.0", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-Seva+NCa0WUQnJIUE5GzHsUv1WTIeyqwz0ELl2VtS6NP+eF+77yCXGFVOMbvoCM7QMjlnhv7931e89R+8pJdcQ=="],
 
@@ -2186,6 +2232,8 @@
 
     "kind-of": ["kind-of@6.0.3", "", {}, "sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw=="],
 
+    "koda": ["koda@workspace:packages/koda"],
+
     "kubernetes-types": ["kubernetes-types@1.30.0", "", {}, "sha512-Dew1okvhM/SQcIa2rcgujNndZwU8VnSapDgdxlYoB84ZlpAD43U6KLAFqYo17ykSFGHNPrg0qry0bP+GJd9v7Q=="],
 
     "lazystream": ["lazystream@1.0.1", "", { "dependencies": { "readable-stream": "^2.0.5" } }, "sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw=="],
@@ -2375,8 +2423,6 @@
     "open": ["open@11.0.4", "", { "dependencies": { "default-browser": "^5.5.1", "define-lazy-prop": "^3.0.0", "is-in-ssh": "^1.0.0", "is-inside-container": "^1.0.0", "powershell-utils": "^0.2.1", "wsl-utils": "^1.0.0" } }, "sha512-++Zlftm0kVLPmzC06t6epuWmcRMDbI4z5P3NNX979WA/k23+NtSOynEGzsVfZwguKw2mi5umVgnBlJQMwRz4Pg=="],
 
     "openai": ["openai@6.39.1", "", { "peerDependencies": { "ws": "^8.18.0", "zod": "^3.25 || ^4.0" }, "optionalPeers": ["ws", "zod"], "bin": { "openai": "bin/cli" } }, "sha512-z3dO9fEWOXBzlXynVb/xZ/tujzUjFWQWn3C0n0mw6Vo0zJTbEkaN4b2cLWjhJ6haJQx8LlREoafHRl+Gu/Hl+A=="],
-
-    "opencode": ["opencode@workspace:packages/opencode"],
 
     "opencode-gitlab-auth": ["opencode-gitlab-auth@2.1.0", "", { "dependencies": { "@fastify/rate-limit": "^10.2.0", "@opencode-ai/plugin": "*", "fastify": "^5.2.0", "open": "^10.0.0" } }, "sha512-ZCDYaY0V8Se6hOH2tqZqqcskrd0xLTgfiGhU0J1igkUP52oFtN9eSwxOPLT0ctvNXUq8b+zOmJ4sskAQoC/IUA=="],
 
@@ -3024,6 +3070,12 @@
 
     "@kobalte/core/@solid-primitives/resize-observer": ["@solid-primitives/resize-observer@2.1.5", "", { "dependencies": { "@solid-primitives/event-listener": "^2.4.5", "@solid-primitives/rootless": "^1.5.3", "@solid-primitives/static-store": "^0.1.3", "@solid-primitives/utils": "^6.4.0" }, "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-AiyTknKcNBaKHbcSMuxtSNM8FjIuiSuFyFghdD0TcCMU9hKi9EmsC5pjfjDwxE+5EueB1a+T/34PLRI5vbBbKw=="],
 
+    "@koda-ai/core/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
+
+    "@koda-ai/plugin/@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
+
+    "@koda-ai/script/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
+
     "@modelcontextprotocol/sdk/zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "@npmcli/config/ini": ["ini@6.0.0", "", {}, "sha512-IBTdIkzZNOpqm7q3dRqJvMaldXjDHWkEDfrwGEQTs5eaQMWV+djAhR+wahyNNMAa+qpbDUhBMVt4ZKNwpPm7xQ=="],
@@ -3066,11 +3118,7 @@
 
     "@openauthjs/openauth/jose": ["jose@5.9.6", "", {}, "sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ=="],
 
-    "@opencode-ai/core/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
-
     "@opencode-ai/plugin/@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
-
-    "@opencode-ai/script/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 
     "@opentui/core/diff": ["diff@9.0.0", "", {}, "sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw=="],
 
@@ -3174,6 +3222,12 @@
 
     "katex/commander": ["commander@8.3.0", "", {}, "sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww=="],
 
+    "koda/@ai-sdk/cerebras": ["@ai-sdk/cerebras@2.0.60", "", { "dependencies": { "@ai-sdk/openai-compatible": "2.0.54", "@ai-sdk/provider": "3.0.12", "@ai-sdk/provider-utils": "4.0.33" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-Rnok3cThg6awBwaDSyiZpgRpbV7pqxGYrA89LODCo5cuEHeP2h0AM0lLHP7zIkclAdXfOm4wldKi/S2T/DGCOw=="],
+
+    "koda/minimatch": ["minimatch@10.0.3", "", { "dependencies": { "@isaacs/brace-expansion": "^5.0.0" } }, "sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw=="],
+
+    "koda/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
+
     "lazystream/readable-stream": ["readable-stream@2.3.8", "", { "dependencies": { "core-util-is": "~1.0.0", "inherits": "~2.0.3", "isarray": "~1.0.0", "process-nextick-args": "~2.0.0", "safe-buffer": "~5.1.1", "string_decoder": "~1.1.1", "util-deprecate": "~1.0.1" } }, "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA=="],
 
     "light-my-request/cookie": ["cookie@1.1.1", "", {}, "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ=="],
@@ -3197,12 +3251,6 @@
     "nypm/citty": ["citty@0.2.2", "", {}, "sha512-+6vJA3L98yv+IdfKGZHBNiGW5KHn22e/JwID0Strsz8h4S/csAu/OuICwxrg44k5MRiZHWIo8XXuJgQTriRP4w=="],
 
     "nypm/tinyexec": ["tinyexec@1.2.4", "", {}, "sha512-SHf/r48b7vOrjve9PxJo3MN5v5yuyjHvdUcrQffT3WXMUfnGmHDVbC4k3sHJaJTgZCwpUplIaAo5ANtMyp3YHg=="],
-
-    "opencode/@ai-sdk/cerebras": ["@ai-sdk/cerebras@2.0.60", "", { "dependencies": { "@ai-sdk/openai-compatible": "2.0.54", "@ai-sdk/provider": "3.0.12", "@ai-sdk/provider-utils": "4.0.33" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-Rnok3cThg6awBwaDSyiZpgRpbV7pqxGYrA89LODCo5cuEHeP2h0AM0lLHP7zIkclAdXfOm4wldKi/S2T/DGCOw=="],
-
-    "opencode/minimatch": ["minimatch@10.0.3", "", { "dependencies": { "@isaacs/brace-expansion": "^5.0.0" } }, "sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw=="],
-
-    "opencode/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 
     "parse5/entities": ["entities@6.0.1", "", {}, "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="],
 
@@ -3434,6 +3482,12 @@
 
     "form-data/mime-types/mime-db": ["mime-db@1.52.0", "", {}, "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg=="],
 
+    "koda/@ai-sdk/cerebras/@ai-sdk/openai-compatible": ["@ai-sdk/openai-compatible@2.0.54", "", { "dependencies": { "@ai-sdk/provider": "3.0.12", "@ai-sdk/provider-utils": "4.0.33" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-OyXt0zK8y2/ZIyWlbxTv2r1M7AK227S+Gl4BYOEF42q0wz1n5m4fwR8L4Fy/MQ4Ho6xje47MPsFcRdIqIyP6Rw=="],
+
+    "koda/@ai-sdk/cerebras/@ai-sdk/provider": ["@ai-sdk/provider@3.0.12", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-sj9DWTJ2Ze0WR9qsiOPqoqzNx3OxL6iMxHImbhvoe9qOspekbzxNDMiJ4TIGfYHYh9w4OmBjz3prvqhzTi96+Q=="],
+
+    "koda/@ai-sdk/cerebras/@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@4.0.33", "", { "dependencies": { "@ai-sdk/provider": "3.0.12", "@standard-schema/spec": "^1.1.0", "eventsource-parser": "^3.0.8" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-nJ0bAfegMAIJtrzMJtbzer1cS3nb7c7DsyU1S4nrPm7ZU0Mn6SBBZv5IGZZGTbpWTJwqKTSPeZJTXalbAxt1BA=="],
+
     "lazystream/readable-stream/safe-buffer": ["safe-buffer@5.1.2", "", {}, "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g=="],
 
     "lazystream/readable-stream/string_decoder": ["string_decoder@1.1.1", "", { "dependencies": { "safe-buffer": "~5.1.0" } }, "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg=="],
@@ -3441,12 +3495,6 @@
     "minipass-flush/minipass/yallist": ["yallist@4.0.0", "", {}, "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="],
 
     "minipass-pipeline/minipass/yallist": ["yallist@4.0.0", "", {}, "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="],
-
-    "opencode/@ai-sdk/cerebras/@ai-sdk/openai-compatible": ["@ai-sdk/openai-compatible@2.0.54", "", { "dependencies": { "@ai-sdk/provider": "3.0.12", "@ai-sdk/provider-utils": "4.0.33" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-OyXt0zK8y2/ZIyWlbxTv2r1M7AK227S+Gl4BYOEF42q0wz1n5m4fwR8L4Fy/MQ4Ho6xje47MPsFcRdIqIyP6Rw=="],
-
-    "opencode/@ai-sdk/cerebras/@ai-sdk/provider": ["@ai-sdk/provider@3.0.12", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-sj9DWTJ2Ze0WR9qsiOPqoqzNx3OxL6iMxHImbhvoe9qOspekbzxNDMiJ4TIGfYHYh9w4OmBjz3prvqhzTi96+Q=="],
-
-    "opencode/@ai-sdk/cerebras/@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@4.0.33", "", { "dependencies": { "@ai-sdk/provider": "3.0.12", "@standard-schema/spec": "^1.1.0", "eventsource-parser": "^3.0.8" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-nJ0bAfegMAIJtrzMJtbzer1cS3nb7c7DsyU1S4nrPm7ZU0Mn6SBBZv5IGZZGTbpWTJwqKTSPeZJTXalbAxt1BA=="],
 
     "readdir-glob/minimatch/brace-expansion": ["brace-expansion@2.1.1", "", { "dependencies": { "balanced-match": "^1.0.0" } }, "sha512-WR1cURNjuvBLMZBMbqM0UoE+WAfdUcEV1ccD8PVBVOI+Z3ND4+SZbN8RsfT2bMuG1qwz5RFvPukSZm5fF2D5eA=="],
 
@@ -3520,7 +3568,7 @@
 
     "babel-plugin-module-resolver/glob/path-scurry/minipass": ["minipass@7.1.3", "", {}, "sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A=="],
 
-    "opencode/@ai-sdk/cerebras/@ai-sdk/provider-utils/@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
+    "koda/@ai-sdk/cerebras/@ai-sdk/provider-utils/@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
     "readdir-glob/minimatch/brace-expansion/balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
 

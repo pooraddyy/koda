@@ -3,10 +3,10 @@ import path from "path"
 import { pathToFileURL } from "url"
 import { describe, expect, test } from "bun:test"
 import { Effect, Option } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { Global } from "@opencode-ai/core/global"
-import { Npm } from "@opencode-ai/core/npm"
-import { which } from "@opencode-ai/core/util/which"
+import { AppNodeBuilder } from "@koda-ai/core/effect/app-node-builder"
+import { Global } from "@koda-ai/core/global"
+import { Npm } from "@koda-ai/core/npm"
+import { which } from "@koda-ai/core/util/which"
 import { tmpdir } from "./fixture/tmpdir"
 
 const win = process.platform === "win32"
@@ -25,14 +25,14 @@ const npmLayer = (cache: string) =>
 
 describe("Npm.sanitize", () => {
   test("keeps normal scoped package specs unchanged", () => {
-    expect(Npm.sanitize("@opencode/acme")).toBe("@opencode/acme")
-    expect(Npm.sanitize("@opencode/acme@1.0.0")).toBe("@opencode/acme@1.0.0")
+    expect(Npm.sanitize("@koda/acme")).toBe("@koda/acme")
+    expect(Npm.sanitize("@koda/acme@1.0.0")).toBe("@koda/acme@1.0.0")
     expect(Npm.sanitize("prettier")).toBe("prettier")
   })
 
   test("handles git https specs", () => {
-    const spec = "acme@git+https://github.com/opencode/acme.git"
-    const expected = win ? "acme@git+https_//github.com/opencode/acme.git" : spec
+    const spec = "acme@git+https://github.com/koda/acme.git"
+    const expected = win ? "acme@git+https_//github.com/koda/acme.git" : spec
     expect(Npm.sanitize(spec)).toBe(expected)
   })
 })

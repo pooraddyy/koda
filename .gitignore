@@ -20,14 +20,14 @@ ts-dist
 /result
 refs
 Session.vim
-/opencode.json
+/koda.json
 a.out
 target
 .scripts
 .direnv/
 
 # Local dev files
-opencode-dev
+koda-dev
 UPCOMING_CHANGELOG.md
 logs/
 *.bun-build

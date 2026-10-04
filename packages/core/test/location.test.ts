@@ -1,10 +1,10 @@
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { Location } from "@opencode-ai/core/location"
-import { Project } from "@opencode-ai/core/project"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { WorkspaceV2 } from "@opencode-ai/core/workspace"
+import { AppNodeBuilder } from "@koda-ai/core/effect/app-node-builder"
+import { Location } from "@koda-ai/core/location"
+import { Project } from "@koda-ai/core/project"
+import { AbsolutePath } from "@koda-ai/core/schema"
+import { WorkspaceV2 } from "@koda-ai/core/workspace"
 import { testEffect } from "./lib/effect"
 
 const workspaceID = WorkspaceV2.ID.make("wrk_test")

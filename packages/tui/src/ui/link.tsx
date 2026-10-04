@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js"
 import type { RGBA } from "@opentui/core"
-import { openUrl } from "@opencode-ai/core/open"
+import { openUrl } from "@koda-ai/core/open"
 
 export interface LinkProps {
   href: string

@@ -1,35 +1,35 @@
 import { expect, test } from "bun:test"
 import { Schema } from "effect"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { Agent } from "@opencode-ai/schema/agent"
-import { Location } from "@opencode-ai/schema/location"
-import { Model } from "@opencode-ai/schema/model"
-import { AgentAttachment, FileAttachment, Prompt, Source } from "@opencode-ai/schema/prompt"
-import { Provider } from "@opencode-ai/schema/provider"
-import { Project } from "@opencode-ai/schema/project"
-import { ProjectDirectories } from "@opencode-ai/schema/project-directories"
-import { PermissionV1 } from "@opencode-ai/schema/permission-v1"
-import { Session } from "@opencode-ai/schema/session"
-import { SessionInput } from "@opencode-ai/schema/session-input"
-import { SessionMessage } from "@opencode-ai/schema/session-message"
-import { Workspace } from "@opencode-ai/schema/workspace"
-import { Command } from "@opencode-ai/schema/command"
-import { Connection } from "@opencode-ai/schema/connection"
-import { Credential } from "@opencode-ai/schema/credential"
-import { FileSystem } from "@opencode-ai/schema/filesystem"
-import { Integration } from "@opencode-ai/schema/integration"
-import { LLM } from "@opencode-ai/schema/llm"
-import { Permission } from "@opencode-ai/schema/permission"
-import { Plugin } from "@opencode-ai/schema/plugin"
-import { Pty } from "@opencode-ai/schema/pty"
-import { Reference } from "@opencode-ai/schema/reference"
-import { SessionTodo } from "@opencode-ai/schema/session-todo"
-import { Skill } from "@opencode-ai/schema/skill"
-import { AbsolutePath, DateTimeUtcFromMillis, optional, statics } from "@opencode-ai/schema/schema"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { PluginV2 } from "@opencode-ai/core/plugin"
+import { AgentV2 } from "@koda-ai/core/agent"
+import { ModelV2 } from "@koda-ai/core/model"
+import { SessionV2 } from "@koda-ai/core/session"
+import { Agent } from "@koda-ai/schema/agent"
+import { Location } from "@koda-ai/schema/location"
+import { Model } from "@koda-ai/schema/model"
+import { AgentAttachment, FileAttachment, Prompt, Source } from "@koda-ai/schema/prompt"
+import { Provider } from "@koda-ai/schema/provider"
+import { Project } from "@koda-ai/schema/project"
+import { ProjectDirectories } from "@koda-ai/schema/project-directories"
+import { PermissionV1 } from "@koda-ai/schema/permission-v1"
+import { Session } from "@koda-ai/schema/session"
+import { SessionInput } from "@koda-ai/schema/session-input"
+import { SessionMessage } from "@koda-ai/schema/session-message"
+import { Workspace } from "@koda-ai/schema/workspace"
+import { Command } from "@koda-ai/schema/command"
+import { Connection } from "@koda-ai/schema/connection"
+import { Credential } from "@koda-ai/schema/credential"
+import { FileSystem } from "@koda-ai/schema/filesystem"
+import { Integration } from "@koda-ai/schema/integration"
+import { LLM } from "@koda-ai/schema/llm"
+import { Permission } from "@koda-ai/schema/permission"
+import { Plugin } from "@koda-ai/schema/plugin"
+import { Pty } from "@koda-ai/schema/pty"
+import { Reference } from "@koda-ai/schema/reference"
+import { SessionTodo } from "@koda-ai/schema/session-todo"
+import { Skill } from "@koda-ai/schema/skill"
+import { AbsolutePath, DateTimeUtcFromMillis, optional, statics } from "@koda-ai/schema/schema"
+import { ProviderV2 } from "@koda-ai/core/provider"
+import { PluginV2 } from "@koda-ai/core/plugin"
 
 test("Core reuses the canonical shared schemas", async () => {
   const [
@@ -55,27 +55,27 @@ test("Core reuses the canonical shared schemas", async () => {
     coreSchema,
     coreWorkspace,
   ] = await Promise.all([
-    import("@opencode-ai/core/command"),
-    import("@opencode-ai/core/integration/connection"),
-    import("@opencode-ai/core/credential"),
-    import("@opencode-ai/core/filesystem"),
-    import("@opencode-ai/core/integration"),
-    import("@opencode-ai/core/location"),
-    import("@opencode-ai/llm"),
-    import("@opencode-ai/core/permission"),
-    import("@opencode-ai/core/v1/permission"),
-    import("@opencode-ai/core/project/copy"),
-    import("@opencode-ai/core/pty"),
-    import("@opencode-ai/core/project/schema"),
-    import("@opencode-ai/core/reference"),
-    import("@opencode-ai/core/session/input"),
-    import("@opencode-ai/core/session/message"),
-    import("@opencode-ai/core/session/todo"),
-    import("@opencode-ai/core/session/prompt"),
-    import("@opencode-ai/core/skill"),
-    import("@opencode-ai/core/v2-schema"),
-    import("@opencode-ai/core/schema"),
-    import("@opencode-ai/core/workspace"),
+    import("@koda-ai/core/command"),
+    import("@koda-ai/core/integration/connection"),
+    import("@koda-ai/core/credential"),
+    import("@koda-ai/core/filesystem"),
+    import("@koda-ai/core/integration"),
+    import("@koda-ai/core/location"),
+    import("@koda-ai/llm"),
+    import("@koda-ai/core/permission"),
+    import("@koda-ai/core/v1/permission"),
+    import("@koda-ai/core/project/copy"),
+    import("@koda-ai/core/pty"),
+    import("@koda-ai/core/project/schema"),
+    import("@koda-ai/core/reference"),
+    import("@koda-ai/core/session/input"),
+    import("@koda-ai/core/session/message"),
+    import("@koda-ai/core/session/todo"),
+    import("@koda-ai/core/session/prompt"),
+    import("@koda-ai/core/skill"),
+    import("@koda-ai/core/v2-schema"),
+    import("@koda-ai/core/schema"),
+    import("@koda-ai/core/workspace"),
   ])
 
   const schemas = [

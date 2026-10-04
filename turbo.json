@@ -1,23 +1,23 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
-  "globalPassThroughEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
+  "globalEnv": ["CI", "KODA_DISABLE_SHARE"],
+  "globalPassThroughEnv": ["CI", "KODA_DISABLE_SHARE"],
   "tasks": {
     "typecheck": {},
     "build": {
       "dependsOn": [],
       "outputs": ["dist/**"]
     },
-    "opencode#test": {
+    "koda#test": {
       "dependsOn": ["^build"],
       "outputs": [],
       "passThroughEnv": ["*"]
     },
-    "@opencode-ai/core#test": {
+    "@koda-ai/core#test": {
       "dependsOn": ["^build"],
       "outputs": []
     },
-    "@opencode-ai/ui#test": {
+    "@koda-ai/ui#test": {
       "dependsOn": ["^build"],
       "outputs": []
     }

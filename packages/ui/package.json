@@ -1,11 +1,11 @@
 {
-  "name": "@opencode-ai/ui",
+  "name": "@koda-ai/ui",
   "version": "1.18.34",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/iiaddy/opencode-cli.git",
     "directory": "packages/ui"
   },
   "publishConfig": {

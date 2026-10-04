@@ -1,8 +1,8 @@
 <p align="center">Открытый AI-агент для программирования.</p>
 <p align="center">
-  <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://koda.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
+  <a href="https://www.npmjs.com/package/koda-ai"><img alt="npm" src="https://img.shields.io/npm/v/koda-ai?style=flat-square" /></a>
+  <a href="https://github.com/iiaddy/opencode-cli/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/iiaddy/opencode-cli/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
   <a href="README.vi.md">Tiếng Việt</a>
 </p>
 
-[![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+[![Koda Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://koda.ai)
 
 ---
 
@@ -38,18 +38,18 @@
 
 ```bash
 # YOLO
-curl -fsSL https://opencode.ai/install | bash
+curl -fsSL https://koda.ai/install | bash
 
 # Менеджеры пакетов
-npm i -g opencode-ai@latest        # или bun/pnpm/yarn
-scoop install opencode             # Windows
-choco install opencode             # Windows
-brew install anomalyco/tap/opencode # macOS и Linux (рекомендуем, всегда актуально)
-brew install opencode              # macOS и Linux (официальная формула brew, обновляется реже)
-sudo pacman -S opencode            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
-mise use -g opencode               # любая ОС
-nix run nixpkgs#opencode           # или github:anomalyco/opencode для самой свежей ветки dev
+npm i -g koda-ai@latest        # или bun/pnpm/yarn
+scoop install koda             # Windows
+choco install koda             # Windows
+brew install iiaddy/tap/koda # macOS и Linux (рекомендуем, всегда актуально)
+brew install koda              # macOS и Linux (официальная формула brew, обновляется реже)
+sudo pacman -S koda            # Arch Linux (Stable)
+paru -S koda-bin               # Arch Linux (Latest from AUR)
+mise use -g koda               # любая ОС
+nix run nixpkgs#koda           # или github:iiaddy/opencode-cli для самой свежей ветки dev
 ```
 
 > [!TIP]
@@ -57,40 +57,40 @@ nix run nixpkgs#opencode           # или github:anomalyco/opencode для с�
 
 ### Десктопное приложение (BETA)
 
-OpenCode также доступен как десктопное приложение. Скачайте его со [страницы релизов](https://github.com/anomalyco/opencode/releases) или с [opencode.ai/download](https://opencode.ai/download).
+Koda также доступен как десктопное приложение. Скачайте его со [страницы релизов](https://github.com/iiaddy/opencode-cli/releases) или с [koda.ai/download](https://koda.ai/download).
 
 | Платформа             | Загрузка                           |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `koda-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `koda-desktop-mac-x64.dmg`     |
+| Windows               | `koda-desktop-windows-x64.exe` |
 | Linux                 | `.deb`, `.rpm` или AppImage        |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask koda-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/koda-desktop
 ```
 
 #### Каталог установки
 
 Скрипт установки выбирает путь установки в следующем порядке приоритета:
 
-1. `$OPENCODE_INSTALL_DIR` - Пользовательский каталог установки
+1. `$KODA_INSTALL_DIR` - Пользовательский каталог установки
 2. `$XDG_BIN_DIR` - Путь, совместимый со спецификацией XDG Base Directory
 3. `$HOME/bin` - Стандартный каталог пользовательских бинарников (если существует или можно создать)
-4. `$HOME/.opencode/bin` - Fallback по умолчанию
+4. `$HOME/.koda/bin` - Fallback по умолчанию
 
 ```bash
 # Примеры
-OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
+KODA_INSTALL_DIR=/usr/local/bin curl -fsSL https://koda.ai/install | bash
+XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://koda.ai/install | bash
 ```
 
 ### Agents
 
-В OpenCode есть два встроенных агента, между которыми можно переключаться клавишей `Tab`.
+В Koda есть два встроенных агента, между которыми можно переключаться клавишей `Tab`.
 
 - **build** - По умолчанию, агент с полным доступом для разработки
 - **plan** - Агент только для чтения для анализа и изучения кода
@@ -101,20 +101,20 @@ XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
 Также включен сабагент **general** для сложных поисков и многошаговых задач.
 Он используется внутренне и может быть вызван в сообщениях через `@general`.
 
-Подробнее об [agents](https://opencode.ai/docs/agents).
+Подробнее об [agents](https://koda.ai/docs/agents).
 
 ### Документация
 
-Больше информации о том, как настроить OpenCode: [**наши docs**](https://opencode.ai/docs).
+Больше информации о том, как настроить Koda: [**наши docs**](https://koda.ai/docs).
 
 ### Вклад
 
-Если вы хотите внести вклад в OpenCode, прочитайте [contributing docs](./CONTRIBUTING.md) перед тем, как отправлять pull request.
+Если вы хотите внести вклад в Koda, прочитайте [contributing docs](./CONTRIBUTING.md) перед тем, как отправлять pull request.
 
-### Разработка на базе OpenCode
+### Разработка на базе Koda
 
-Если вы делаете проект, связанный с OpenCode, и используете "opencode" как часть имени (например, "opencode-dashboard" или "opencode-mobile"), добавьте примечание в README, чтобы уточнить, что проект не создан командой OpenCode и не аффилирован с нами.
+Если вы делаете проект, связанный с Koda, и используете "koda" как часть имени (например, "koda-dashboard" или "koda-mobile"), добавьте примечание в README, чтобы уточнить, что проект не создан командой Koda и не аффилирован с нами.
 
 ---
 
-**Присоединяйтесь к нашему сообществу** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+**Присоединяйтесь к нашему сообществу** [Discord](https://discord.gg/koda) | [X.com](https://x.com/koda)

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   refresh:
-    if: github.repository == 'anomalyco/opencode'
+    if: github.repository == 'iiaddy/opencode-cli'
     runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
@@ -33,8 +33,8 @@ jobs:
       - name: Setup git committer
         uses: ./.github/actions/setup-git-committer
         with:
-          opencode-app-id: ${{ vars.OPENCODE_APP_ID }}
-          opencode-app-secret: ${{ secrets.OPENCODE_APP_SECRET }}
+          koda-app-id: ${{ vars.KODA_APP_ID }}
+          koda-app-secret: ${{ secrets.KODA_APP_SECRET }}
 
       - name: Refresh snapshot
         run: bun packages/core/script/update-models-snapshot.ts

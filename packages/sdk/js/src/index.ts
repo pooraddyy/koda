@@ -1,16 +1,16 @@
 export * from "./client.js"
 export * from "./server.js"
 
-import { createOpencodeClient } from "./client.js"
-import { createOpencodeServer } from "./server.js"
+import { createKodaClient } from "./client.js"
+import { createKodaServer } from "./server.js"
 import type { ServerOptions } from "./server.js"
 
-export async function createOpencode(options?: ServerOptions) {
-  const server = await createOpencodeServer({
+export async function createKoda(options?: ServerOptions) {
+  const server = await createKodaServer({
     ...options,
   })
 
-  const client = createOpencodeClient({
+  const client = createKodaClient({
     baseUrl: server.url,
   })
 

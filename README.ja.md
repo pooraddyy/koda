@@ -1,8 +1,8 @@
 <p align="center">オープンソースのAIコーディングエージェント。</p>
 <p align="center">
-  <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://koda.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
+  <a href="https://www.npmjs.com/package/koda-ai"><img alt="npm" src="https://img.shields.io/npm/v/koda-ai?style=flat-square" /></a>
+  <a href="https://github.com/iiaddy/opencode-cli/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/iiaddy/opencode-cli/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
   <a href="README.vi.md">Tiếng Việt</a>
 </p>
 
-[![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+[![Koda Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://koda.ai)
 
 ---
 
@@ -38,18 +38,18 @@
 
 ```bash
 # YOLO
-curl -fsSL https://opencode.ai/install | bash
+curl -fsSL https://koda.ai/install | bash
 
 # パッケージマネージャー
-npm i -g opencode-ai@latest        # bun/pnpm/yarn でもOK
-scoop install opencode             # Windows
-choco install opencode             # Windows
-brew install anomalyco/tap/opencode # macOS と Linux（推奨。常に最新）
-brew install opencode              # macOS と Linux（公式 brew formula。更新頻度は低め）
-sudo pacman -S opencode            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
-mise use -g opencode               # どのOSでも
-nix run nixpkgs#opencode           # または github:anomalyco/opencode で最新 dev ブランチ
+npm i -g koda-ai@latest        # bun/pnpm/yarn でもOK
+scoop install koda             # Windows
+choco install koda             # Windows
+brew install iiaddy/tap/koda # macOS と Linux（推奨。常に最新）
+brew install koda              # macOS と Linux（公式 brew formula。更新頻度は低め）
+sudo pacman -S koda            # Arch Linux (Stable)
+paru -S koda-bin               # Arch Linux (Latest from AUR)
+mise use -g koda               # どのOSでも
+nix run nixpkgs#koda           # または github:iiaddy/opencode-cli で最新 dev ブランチ
 ```
 
 > [!TIP]
@@ -57,40 +57,40 @@ nix run nixpkgs#opencode           # または github:anomalyco/opencode で最�
 
 ### デスクトップアプリ (BETA)
 
-OpenCode はデスクトップアプリとしても利用できます。[releases page](https://github.com/anomalyco/opencode/releases) から直接ダウンロードするか、[opencode.ai/download](https://opencode.ai/download) を利用してください。
+Koda はデスクトップアプリとしても利用できます。[releases page](https://github.com/iiaddy/opencode-cli/releases) から直接ダウンロードするか、[koda.ai/download](https://koda.ai/download) を利用してください。
 
 | プラットフォーム      | ダウンロード                       |
 | --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe` |
+| macOS (Apple Silicon) | `koda-desktop-mac-arm64.dmg`   |
+| macOS (Intel)         | `koda-desktop-mac-x64.dmg`     |
+| Windows               | `koda-desktop-windows-x64.exe` |
 | Linux                 | `.deb`、`.rpm`、または AppImage    |
 
 ```bash
 # macOS (Homebrew)
-brew install --cask opencode-desktop
+brew install --cask koda-desktop
 # Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
+scoop bucket add extras; scoop install extras/koda-desktop
 ```
 
 #### インストールディレクトリ
 
 インストールスクリプトは、インストール先パスを次の優先順位で決定します。
 
-1. `$OPENCODE_INSTALL_DIR` - カスタムのインストールディレクトリ
+1. `$KODA_INSTALL_DIR` - カスタムのインストールディレクトリ
 2. `$XDG_BIN_DIR` - XDG Base Directory Specification に準拠したパス
 3. `$HOME/bin` - 標準のユーザー用バイナリディレクトリ（存在する場合、または作成できる場合）
-4. `$HOME/.opencode/bin` - デフォルトのフォールバック
+4. `$HOME/.koda/bin` - デフォルトのフォールバック
 
 ```bash
 # 例
-OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
+KODA_INSTALL_DIR=/usr/local/bin curl -fsSL https://koda.ai/install | bash
+XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://koda.ai/install | bash
 ```
 
 ### Agents
 
-OpenCode には組み込みの Agent が2つあり、`Tab` キーで切り替えられます。
+Koda には組み込みの Agent が2つあり、`Tab` キーで切り替えられます。
 
 - **build** - デフォルト。開発向けのフルアクセス Agent
 - **plan** - 分析とコード探索向けの読み取り専用 Agent
@@ -101,20 +101,20 @@ OpenCode には組み込みの Agent が2つあり、`Tab` キーで切り替え
 また、複雑な検索やマルチステップのタスク向けに **general** サブ Agent も含まれています。
 内部的に使用されており、メッセージで `@general` と入力して呼び出せます。
 
-[agents](https://opencode.ai/docs/agents) の詳細はこちら。
+[agents](https://koda.ai/docs/agents) の詳細はこちら。
 
 ### ドキュメント
 
-OpenCode の設定については [**ドキュメント**](https://opencode.ai/docs) を参照してください。
+Koda の設定については [**ドキュメント**](https://koda.ai/docs) を参照してください。
 
 ### コントリビュート
 
-OpenCode に貢献したい場合は、Pull Request を送る前に [contributing docs](./CONTRIBUTING.md) を読んでください。
+Koda に貢献したい場合は、Pull Request を送る前に [contributing docs](./CONTRIBUTING.md) を読んでください。
 
-### OpenCode の上に構築する
+### Koda の上に構築する
 
-OpenCode に関連するプロジェクトで、名前に "opencode"（例: "opencode-dashboard" や "opencode-mobile"）を含める場合は、そのプロジェクトが OpenCode チームによって作られたものではなく、いかなる形でも関係がないことを README に明記してください。
+Koda に関連するプロジェクトで、名前に "koda"（例: "koda-dashboard" や "koda-mobile"）を含める場合は、そのプロジェクトが Koda チームによって作られたものではなく、いかなる形でも関係がないことを README に明記してください。
 
 ---
 
-**コミュニティに参加** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+**コミュニティに参加** [Discord](https://discord.gg/koda) | [X.com](https://x.com/koda)

@@ -1,8 +1,8 @@
 import { describe, test, expect } from "bun:test"
 import { Effect, FileSystem } from "effect"
-import { LayerNodePlatform } from "@opencode-ai/core/effect/app-node-platform"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { FSUtil } from "@opencode-ai/core/fs-util"
+import { LayerNodePlatform } from "@koda-ai/core/effect/app-node-platform"
+import { LayerNode } from "@koda-ai/core/effect/layer-node"
+import { FSUtil } from "@koda-ai/core/fs-util"
 import { testEffect } from "../lib/effect"
 import path from "path"
 

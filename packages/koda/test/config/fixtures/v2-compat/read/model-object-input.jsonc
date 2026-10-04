@@ -1,0 +1,4 @@
+{
+  "$schema": "https://koda.ai/config.json",
+  "model": { "providerID": "anthropic", "model": "claude-sonnet", "variant": "fast" },
+}

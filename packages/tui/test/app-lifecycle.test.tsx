@@ -1,9 +1,9 @@
 import { expect, mock, test } from "bun:test"
-import type { TuiPluginApi } from "@opencode-ai/plugin/tui"
+import type { TuiPluginApi } from "@koda-ai/plugin/tui"
 import { createTestRenderer } from "@opentui/core/testing"
 import { Effect } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { Global } from "@opencode-ai/core/global"
+import { AppNodeBuilder } from "@koda-ai/core/effect/app-node-builder"
+import { Global } from "@koda-ai/core/global"
 import { createTuiResolvedConfig } from "./fixture/tui-runtime"
 import { createEventSource, createFetch, directory, json } from "./fixture/tui-sdk"
 
@@ -119,7 +119,7 @@ test("app.exit prints the session epilogue after scoped cleanup", async () => {
     await task
 
     expect(stdout).toContain("Demo session")
-    expect(stdout).toContain("opencode -s dummy")
+    expect(stdout).toContain("koda -s dummy")
   } finally {
     process.stdout.write = originalWrite
     if (!setup.renderer.isDestroyed) setup.renderer.destroy()
@@ -139,7 +139,7 @@ test("fatal startup errors set a nonzero exit after scoped cleanup", async () =>
           name: "ConfigRemoteAuthError",
           data: {
             url: "https://example.com",
-            remote: "https://config.example.com/opencode.json",
+            remote: "https://config.example.com/koda.json",
           },
         },
         { status: 400 },
@@ -176,7 +176,7 @@ test("fatal startup errors set a nonzero exit after scoped cleanup", async () =>
     )
 
     await task
-    expect(stderr).toContain("Run `opencode auth login https://example.com` to re-authenticate.")
+    expect(stderr).toContain("Run `koda auth login https://example.com` to re-authenticate.")
     expect(stderr).not.toContain("Unexpected server error")
     expect(process.exitCode).toBe(1)
     expect(setup.renderer.isDestroyed).toBe(true)

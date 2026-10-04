@@ -1,0 +1,4 @@
+{
+  "$schema": "https://koda.ai/config.json",
+  "model": "anthropic/claude-sonnet"
+}

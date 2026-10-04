@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode-ai/tui",
+  "name": "@koda-ai/tui",
   "version": "1.18.34",
   "private": true,
   "type": "module",
@@ -48,10 +48,10 @@
     "./component/register-spinner": "./src/component/register-spinner.ts"
   },
   "dependencies": {
-    "@opencode-ai/core": "workspace:*",
-    "@opencode-ai/plugin": "workspace:*",
-    "@opencode-ai/sdk": "workspace:*",
-    "@opencode-ai/ui": "workspace:*",
+    "@koda-ai/core": "workspace:*",
+    "@koda-ai/plugin": "workspace:*",
+    "@koda-ai/sdk": "workspace:*",
+    "@koda-ai/ui": "workspace:*",
     "@opentui/core": "catalog:",
     "@opentui/keymap": "catalog:",
     "@opentui/solid": "catalog:",

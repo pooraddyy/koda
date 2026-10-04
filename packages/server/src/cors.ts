@@ -1,10 +1,10 @@
 import { Context } from "effect"
 
-const opencodeOrigin = /^https:\/\/([a-z0-9-]+\.)*opencode\.ai$/
+const kodaOrigin = /^https:\/\/([a-z0-9-]+\.)*koda\.ai$/
 
 export type CorsOptions = { readonly cors?: ReadonlyArray<string> }
 
-export const CorsConfig = Context.Reference<CorsOptions | undefined>("@opencode/ServerCorsConfig", {
+export const CorsConfig = Context.Reference<CorsOptions | undefined>("@koda/ServerCorsConfig", {
   defaultValue: () => undefined,
 })
 
@@ -12,7 +12,7 @@ export function isAllowedCorsOrigin(input: string | undefined, opts?: CorsOption
   if (!input) return true
   if (input.startsWith("http://localhost:")) return true
   if (input.startsWith("http://127.0.0.1:")) return true
-  if (opencodeOrigin.test(input)) return true
+  if (kodaOrigin.test(input)) return true
   return opts?.cors?.includes(input) ?? false
 }
 

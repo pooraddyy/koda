@@ -1,5 +1,5 @@
 import { RGBA, TextAttributes } from "@opentui/core"
-import { openUrl } from "@opencode-ai/core/open"
+import { openUrl } from "@koda-ai/core/open"
 import { createSignal } from "solid-js"
 import { selectedForeground, useTheme } from "../context/theme"
 import { useDialog, type DialogContext } from "../ui/dialog"
@@ -7,7 +7,7 @@ import { Link } from "../ui/link"
 import { BgPulse } from "./bg-pulse"
 import { useBindings } from "../keymap"
 
-const GO_URL = "https://opencode.ai/go"
+const GO_URL = "https://koda.ai/go"
 const PAD_X = 3
 const PAD_TOP_OUTER = 1
 const FOREGROUND_ALPHA = 186

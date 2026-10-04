@@ -1,11 +1,11 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
-import { Catalog } from "@opencode-ai/core/catalog"
-import { PluginV2 } from "@opencode-ai/core/plugin"
-import { PluginHost } from "@opencode-ai/core/plugin/host"
-import { ProviderPlugins } from "@opencode-ai/core/plugin/provider"
-import { NvidiaPlugin } from "@opencode-ai/core/plugin/provider/nvidia"
-import { ProviderV2 } from "@opencode-ai/core/provider"
+import { Catalog } from "@koda-ai/core/catalog"
+import { PluginV2 } from "@koda-ai/core/plugin"
+import { PluginHost } from "@koda-ai/core/plugin/host"
+import { ProviderPlugins } from "@koda-ai/core/plugin/provider"
+import { NvidiaPlugin } from "@koda-ai/core/plugin/provider/nvidia"
+import { ProviderV2 } from "@koda-ai/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -39,9 +39,9 @@ describe("NvidiaPlugin", () => {
       yield* addPlugin()
       expect((yield* catalog.provider.get(ProviderV2.ID.make("nvidia")))?.request.headers).toEqual({
         Existing: "value",
-        "HTTP-Referer": "https://opencode.ai/",
-        "X-Title": "opencode",
-        "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+        "HTTP-Referer": "https://koda.ai/",
+        "X-Title": "koda",
+        "X-BILLING-INVOKE-ORIGIN": "Koda",
       })
       expect((yield* catalog.provider.get(ProviderV2.ID.openrouter))?.request.headers).toEqual({})
     }),
@@ -62,9 +62,9 @@ describe("NvidiaPlugin", () => {
       yield* addPlugin()
 
       expect((yield* catalog.provider.get(ProviderV2.ID.make("nvidia")))?.request.headers).toEqual({
-        "HTTP-Referer": "https://opencode.ai/",
-        "X-Title": "opencode",
-        "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+        "HTTP-Referer": "https://koda.ai/",
+        "X-Title": "koda",
+        "X-BILLING-INVOKE-ORIGIN": "Koda",
       })
     }),
   )
@@ -88,8 +88,8 @@ describe("NvidiaPlugin", () => {
       yield* addPlugin()
 
       expect((yield* catalog.provider.get(ProviderV2.ID.make("nvidia")))?.request.headers).toEqual({
-        "HTTP-Referer": "https://opencode.ai/",
-        "X-Title": "opencode",
+        "HTTP-Referer": "https://koda.ai/",
+        "X-Title": "koda",
         "X-BILLING-INVOKE-ORIGIN": "CustomOrigin",
       })
     }),

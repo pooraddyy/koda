@@ -1,10 +1,10 @@
-import { Location } from "@opencode-ai/core/location"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
+import { Location } from "@koda-ai/core/location"
+import { PermissionV2 } from "@koda-ai/core/permission"
+import { PermissionSaved } from "@koda-ai/core/permission/saved"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { PermissionNotFoundError, SessionNotFoundError } from "@opencode-ai/protocol/errors"
+import { PermissionNotFoundError, SessionNotFoundError } from "@koda-ai/protocol/errors"
 import { response } from "../location"
 
 function missingRequest(id: PermissionV2.ID) {
