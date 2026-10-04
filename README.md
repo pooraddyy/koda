@@ -10,8 +10,9 @@
 ### Installation
 
 ```bash
-# YOLO
-curl -fsSL https://koda.ai/install | bash
+# YOLO (repo is private — a GitHub token with repo access is required)
+export GITHUB_TOKEN=ghp_xxx
+curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/pooraddyy/koda/dev/install | bash
 
 # Package managers
 npm i -g koda-ai@latest        # or bun/pnpm/yarn
@@ -39,8 +40,9 @@ The install script respects the following priority order for the installation pa
 
 ```bash
 # Examples
-KODA_INSTALL_DIR=/usr/local/bin curl -fsSL https://koda.ai/install | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://koda.ai/install | bash
+export GITHUB_TOKEN=ghp_xxx
+KODA_INSTALL_DIR=/usr/local/bin curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/pooraddyy/koda/dev/install | bash
+XDG_BIN_DIR=$HOME/.local/bin curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/pooraddyy/koda/dev/install | bash
 ```
 
 ### Agents

@@ -144,7 +144,12 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
 
     const upgradeCurl = Effect.fnUntraced(
       function* (target: string) {
-        const response = yield* httpOk.execute(HttpClientRequest.get("https://koda.ai/install"))
+        // Private repo: install script is fetched from GitHub with a token.
+        const githubToken = process.env["GITHUB_TOKEN"]
+        const installRequest = HttpClientRequest.get("https://raw.githubusercontent.com/pooraddyy/koda/dev/install").pipe(
+          githubToken ? HttpClientRequest.setHeaders({ Authorization: `Bearer ${githubToken}` }) : (req) => req,
+        )
+        const response = yield* httpOk.execute(installRequest)
         const body = yield* response.text
         const bodyBytes = new TextEncoder().encode(body)
         const shell = yield* upgradeScriptShell()
