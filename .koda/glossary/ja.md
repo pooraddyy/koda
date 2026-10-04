@@ -2,8 +2,8 @@
 
 ## Sources
 
-- PR #9821: https://github.com/iiaddy/opencode-cli/pull/9821
-- PR #13160: https://github.com/iiaddy/opencode-cli/pull/13160
+- PR #9821: https://github.com/pooraddyy/opencode-cli/pull/9821
+- PR #13160: https://github.com/pooraddyy/opencode-cli/pull/13160
 
 ## Do Not Translate (Locale Additions)
 

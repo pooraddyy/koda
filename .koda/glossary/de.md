@@ -2,7 +2,7 @@
 
 ## Sources
 
-- PR #9817: https://github.com/iiaddy/opencode-cli/pull/9817
+- PR #9817: https://github.com/pooraddyy/opencode-cli/pull/9817
 
 ## Do Not Translate (Locale Additions)
 

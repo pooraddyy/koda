@@ -3,7 +3,7 @@ description: "find issue(s) on github"
 model: koda/claude-haiku-4-5
 ---
 
-Search through existing issues in iiaddy/opencode-cli using the gh cli to find issues matching this query:
+Search through existing issues in pooraddyy/opencode-cli using the gh cli to find issues matching this query:
 
 $ARGUMENTS
 

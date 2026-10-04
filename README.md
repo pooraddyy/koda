@@ -2,7 +2,7 @@
 <p align="center">
   <a href="https://koda.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/koda-ai"><img alt="npm" src="https://img.shields.io/npm/v/koda-ai?style=flat-square" /></a>
-  <a href="https://github.com/iiaddy/opencode-cli/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/iiaddy/opencode-cli/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/pooraddyy/opencode-cli/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/pooraddyy/opencode-cli/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
 ---
@@ -17,12 +17,12 @@ curl -fsSL https://koda.ai/install | bash
 npm i -g koda-ai@latest        # or bun/pnpm/yarn
 scoop install koda             # Windows
 choco install koda             # Windows
-brew install iiaddy/tap/koda # macOS and Linux (recommended, always up to date)
+brew install pooraddyy/tap/koda # macOS and Linux (recommended, always up to date)
 brew install koda              # macOS and Linux (official brew formula, updated less)
 sudo pacman -S koda            # Arch Linux (Stable)
 paru -S koda-bin               # Arch Linux (Latest from AUR)
 mise use -g koda               # Any OS
-nix run nixpkgs#koda           # or github:iiaddy/opencode-cli for latest dev branch
+nix run nixpkgs#koda           # or github:pooraddyy/opencode-cli for latest dev branch
 ```
 
 > [!TIP]

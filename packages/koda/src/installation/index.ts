@@ -123,8 +123,8 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
     )
 
     const getBrewFormula = Effect.fnUntraced(function* () {
-      const tapFormula = yield* text(["brew", "list", "--formula", "iiaddy/tap/koda"])
-      if (tapFormula.includes("koda")) return "iiaddy/tap/koda"
+      const tapFormula = yield* text(["brew", "list", "--formula", "pooraddyy/tap/koda"])
+      if (tapFormula.includes("koda")) return "pooraddyy/tap/koda"
       const coreFormula = yield* text(["brew", "list", "--formula", "koda"])
       if (coreFormula.includes("koda")) return "koda"
       return "koda"
@@ -255,7 +255,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
         }
 
         const response = yield* httpOk.execute(
-          HttpClientRequest.get("https://api.github.com/repos/iiaddy/opencode-cli/releases/latest").pipe(
+          HttpClientRequest.get("https://api.github.com/repos/pooraddyy/opencode-cli/releases/latest").pipe(
             HttpClientRequest.acceptJson,
           ),
         )
@@ -281,12 +281,12 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
             const formula = yield* getBrewFormula()
             const env = { HOMEBREW_NO_AUTO_UPDATE: "1" }
             if (formula.includes("/")) {
-              const tap = yield* run(["brew", "tap", "iiaddy/tap"], { env })
+              const tap = yield* run(["brew", "tap", "pooraddyy/tap"], { env })
               if (tap.code !== 0) {
                 upgradeResult = tap
                 break
               }
-              const repo = yield* text(["brew", "--repo", "iiaddy/tap"])
+              const repo = yield* text(["brew", "--repo", "pooraddyy/tap"])
               const dir = repo.trim()
               if (dir) {
                 const pull = yield* run(["git", "pull", "--ff-only"], { cwd: dir, env })

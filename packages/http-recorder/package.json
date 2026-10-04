@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iiaddy/opencode-cli.git",
+    "url": "git+https://github.com/pooraddyy/opencode-cli.git",
     "directory": "packages/http-recorder"
   },
-  "homepage": "https://github.com/iiaddy/opencode-cli/tree/dev/packages/http-recorder",
-  "bugs": "https://github.com/iiaddy/opencode-cli/issues",
+  "homepage": "https://github.com/pooraddyy/opencode-cli/tree/dev/packages/http-recorder",
+  "bugs": "https://github.com/pooraddyy/opencode-cli/issues",
   "keywords": [
     "effect",
     "http",

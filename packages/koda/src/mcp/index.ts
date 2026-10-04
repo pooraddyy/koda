@@ -38,13 +38,13 @@ import { McpBrowser } from "./browser"
 const DEFAULT_TIMEOUT = 30_000
 const CLIENT_OPTIONS = {
   capabilities: {
-    // https://github.com/iiaddy/opencode-cli/issues/11948
+    // https://github.com/pooraddyy/opencode-cli/issues/11948
     // sampling: {},
-    // https://github.com/iiaddy/opencode-cli/issues/23066
+    // https://github.com/pooraddyy/opencode-cli/issues/23066
     // elicitation: {},
-    // https://github.com/iiaddy/opencode-cli/issues/2308
+    // https://github.com/pooraddyy/opencode-cli/issues/2308
     roots: {},
-    // https://github.com/iiaddy/opencode-cli/issues/28567
+    // https://github.com/pooraddyy/opencode-cli/issues/28567
     // tasks: {},
   },
 } satisfies ClientOptions
