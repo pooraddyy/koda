@@ -258,18 +258,22 @@ print_progress() {
     local length="$2"
     [ "$length" -gt 0 ] || return 0
 
-    local width=50
+    local width=40
     local percent=$(( bytes * 100 / length ))
     [ "$percent" -gt 100 ] && percent=100
     local on=$(( percent * width / 100 ))
     local off=$(( width - on ))
 
-    local filled=$(printf "%*s" "$on" "")
-    filled=${filled// /■}
-    local empty=$(printf "%*s" "$off" "")
-    empty=${empty// /･}
+    local mb_done mb_total
+    mb_done=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+    mb_total=$(awk "BEGIN {printf \"%.1f\", $length/1048576}")
 
-    printf "\r${ORANGE}%s%s %3d%%${NC}" "$filled" "$empty" "$percent" >&4
+    local filled=$(printf "%*s" "$on" "")
+    filled=${filled// /█}
+    local empty=$(printf "%*s" "$off" "")
+    empty=${empty// /░}
+
+    printf "\r${CYAN}▕%s%s▏${NC} ${BOLD}%3d%%${NC} ${MUTED}%s/%s MB${NC}" "$filled" "$empty" "$percent" "$mb_done" "$mb_total" >&4
 }
 
 download_with_progress() {
