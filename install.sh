@@ -456,10 +456,11 @@ if [ -n "${GITHUB_ACTIONS-}" ] && [ "${GITHUB_ACTIONS}" == "true" ]; then
 fi
 
 echo -e ""
-echo -e "${MUTED}                    ${NC}             ▄     "
-echo -e "${MUTED}█▀▀█ █▀▀█ █▀▀█ █▀▀▄ ${NC}█▀▀▀ █▀▀█ █▀▀█ █▀▀█"
-echo -e "${MUTED}█░░█ █░░█ █▀▀▀ █░░█ ${NC}█░░░ █░░█ █░░█ █▀▀▀"
-echo -e "${MUTED}▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀  ▀ ${NC}▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀"
+echo -e "${MUTED}█▓▒  ███ ▄██▀▀██▄ ${NC}▀▀▀▀▀██▄ ▄▓▒▀▀██▄"
+echo -e "${MUTED}▀▀▀ ▄██▀ ▀▀▀▐▌███ ${NC}▓▒░▐▌███ ▀▀▀  ███"
+echo -e "${MUTED}▒░ ▀▀█▄  ▓▒░▐▌██░ ${NC}▒░█▐▌██░ ▒░ ▀▀███"
+echo -e "${MUTED}░ █▐▌██░ ▒░█▐▌█░▒ ${NC}░██▐▌█░▒ ░ █▐▌██░"
+echo -e "${MUTED}███  █░▒ ▀██▄▄░▒▀ ${NC}███▄▄░▒▀ ███  █░▒"
 echo -e ""
 echo -e ""
 echo -e "${MUTED}Koda includes free models, to start:${NC}"
