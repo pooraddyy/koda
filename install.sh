@@ -6,6 +6,7 @@ MUTED='\033[0;2m'
 RED='\033[0;31m'
 ORANGE='\033[38;5;214m'
 CYAN='\033[0;36m'
+YELLOW='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
@@ -275,7 +276,7 @@ print_progress() {
     local empty=$(printf "%*s" "$off" "")
     empty=${empty// /░}
 
-    printf "\r${CYAN}▕%s%s▏${NC} ${BOLD}%3d%%${NC} ${MUTED}%s/%s MB${NC}" "$filled" "$empty" "$percent" "$mb_done" "$mb_total" >&4
+    printf "\r${YELLOW}▕%s%s▏${NC} ${BOLD}%3d%%${NC} ${MUTED}%s/%s MB${NC}" "$filled" "$empty" "$percent" "$mb_done" "$mb_total" >&4
 }
 
 download_with_progress() {
