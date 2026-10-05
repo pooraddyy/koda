@@ -126,7 +126,7 @@ export function createDialogProviderOptions() {
       providerID,
       auth: { type: "api", key: apiKey.trim() },
     })
-    await sdk.client.config.update({
+    await sdk.client.global.config.update({
       config: {
         provider: {
           [providerID]: {
@@ -140,7 +140,7 @@ export function createDialogProviderOptions() {
     })
     await sdk.client.instance.dispose()
     await sync.bootstrap()
-    toast.show({ variant: "info", message: `Connected ${displayName.trim()} (${providerID})` })
+    toast.show({ variant: "success", message: `Connected ${displayName.trim()} (${providerID})` })
     dialog.replace(() => <DialogModel providerID={providerID} />)
   }
 
