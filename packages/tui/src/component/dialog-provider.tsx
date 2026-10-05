@@ -71,7 +71,7 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
       type: "custom",
       title: "Other",
       value: CUSTOM_PROVIDER_OPTION_VALUE,
-      description: "Custom provider",
+      description: "OpenAI-compatible API",
       category: "Providers",
     },
   ]
@@ -90,6 +90,71 @@ export function createDialogProviderOptions() {
   const toast = useToast()
   const { theme } = useTheme()
   const onboarded = useConnected()
+
+  async function promptCustomProvider(): Promise<void> {
+    const providerID = await promptCustomProviderID()
+    if (!providerID) return
+
+    const displayName = await DialogPrompt.show(dialog, "Custom provider", {
+      placeholder: "Display name",
+      description: () => <text fg={theme.textMuted}>Name shown in the provider list, e.g. My Provider</text>,
+    })
+    if (displayName === null || !displayName.trim()) return
+
+    const baseURL = await promptCustomBaseURL()
+    if (!baseURL) return
+
+    const apiKey = await DialogPrompt.show(dialog, "Custom provider", {
+      placeholder: "API key",
+      description: () => <text fg={theme.textMuted}>API key for {displayName.trim()}</text>,
+    })
+    if (apiKey === null || !apiKey.trim()) return
+
+    const modelID = await DialogPrompt.show(dialog, "Custom provider", {
+      placeholder: "Model id",
+      description: () => <text fg={theme.textMuted}>Model id as expected by the API, e.g. gpt-4o</text>,
+    })
+    if (modelID === null || !modelID.trim()) return
+
+    const modelName = await DialogPrompt.show(dialog, "Custom provider", {
+      placeholder: "Model display name",
+      description: () => <text fg={theme.textMuted}>Name shown in the model list, e.g. My Model</text>,
+    })
+    if (modelName === null || !modelName.trim()) return
+
+    await sdk.client.auth.set({
+      providerID,
+      auth: { type: "api", key: apiKey.trim() },
+    })
+    await sdk.client.config.update({
+      config: {
+        provider: {
+          [providerID]: {
+            name: displayName.trim(),
+            npm: "@ai-sdk/openai-compatible",
+            options: { baseURL },
+            models: { [modelID.trim()]: { name: modelName.trim() } },
+          },
+        },
+      },
+    })
+    await sdk.client.instance.dispose()
+    await sync.bootstrap()
+    toast.show({ variant: "info", message: `Connected ${displayName.trim()} (${providerID})` })
+    dialog.replace(() => <DialogModel providerID={providerID} />)
+  }
+
+  async function promptCustomBaseURL(): Promise<string | undefined> {
+    const value = await DialogPrompt.show(dialog, "Custom provider", {
+      placeholder: "Base URL",
+      description: () => <text fg={theme.textMuted}>OpenAI-compatible base URL, e.g. https://api.example.com/v1</text>,
+    })
+    if (value === null) return
+    const baseURL = value.trim()
+    if (baseURL.startsWith("http://") || baseURL.startsWith("https://")) return baseURL
+    toast.show({ variant: "error", message: "Base URL must start with http:// or https://" })
+    return promptCustomBaseURL()
+  }
 
   async function promptCustomProviderID(): Promise<string | undefined> {
     const value = await DialogPrompt.show(dialog, "Other", {
@@ -124,9 +189,7 @@ export function createDialogProviderOptions() {
             description: provider.description,
             category: provider.category,
             async onSelect() {
-              const providerID = await promptCustomProviderID()
-              if (!providerID) return
-              return dialog.replace(() => <ApiMethod providerID={providerID} title="API key" custom />)
+              return promptCustomProvider()
             },
           }
         }
@@ -353,13 +416,11 @@ interface ApiMethodProps {
   providerID: string
   title: string
   metadata?: Record<string, string>
-  custom?: boolean
 }
 function ApiMethod(props: ApiMethodProps) {
   const dialog = useDialog()
   const sdk = useSDK()
   const sync = useSync()
-  const toast = useToast()
   const { theme } = useTheme()
 
   return (
@@ -404,14 +465,6 @@ function ApiMethod(props: ApiMethodProps) {
         })
         await sdk.client.instance.dispose()
         await sync.bootstrap()
-        if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {
-          toast.show({
-            variant: "info",
-            message: `Saved credential for ${props.providerID}. Configure it in koda.json to use it.`,
-          })
-          dialog.clear()
-          return
-        }
         dialog.replace(() => <DialogModel providerID={props.providerID} />)
       }}
     />
