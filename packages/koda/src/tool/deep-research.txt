@@ -1,0 +1,12 @@
+Deep research on any topic by combining web search, content extraction, and LLM synthesis.
+
+Use this when you need thorough investigation of a topic — market analysis, technical comparisons, current events, academic topics, or any question requiring multiple sources.
+
+The research follows a systematic process:
+1. Generate diverse search queries covering different angles
+2. Search the web and extract content from top sources
+3. Identify key learnings, facts, and metrics
+4. Follow up on interesting threads with deeper queries
+5. Synthesize everything into a comprehensive markdown report with sources
+
+For quick lookups, use websearch directly. For deep, multi-angle investigation, use this tool.

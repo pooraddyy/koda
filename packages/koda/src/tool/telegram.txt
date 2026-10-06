@@ -1,0 +1,8 @@
+Send messages via Telegram bot, connect/disconnect the bot, and manage research tasks.
+
+Use this to:
+- Connect a Telegram bot (requires bot token from @BotFather and your Telegram user ID)
+- Send updates and notifications to Telegram
+- Start deep research tasks that send periodic updates to Telegram
+
+The bot supports commands: /research, /stop, /status, /help, and direct chat.
