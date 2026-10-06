@@ -47,11 +47,10 @@ export function DialogTelegram() {
             <DialogPrompt
               title="Telegram Admin ID"
               description={() => (
-                <>
-                  Enter your Telegram user ID (numbers only).
-                  <br />
-                  Get it from @userinfobot on Telegram.
-                </>
+                <box flexDirection="column">
+                  <text>Enter your Telegram user ID (numbers only).</text>
+                  <text>Get it from @userinfobot on Telegram.</text>
+                </box>
               )}
               placeholder="123456789"
               onConfirm={(v) => {
@@ -71,11 +70,10 @@ export function DialogTelegram() {
           <DialogPrompt
             title="Connect Telegram Bot"
             description={() => (
-              <>
-                Enter your Telegram bot token.
-                <br />
-                Get one from @BotFather on Telegram.
-              </>
+              <box flexDirection="column">
+                <text>Enter your Telegram bot token.</text>
+                <text>Get one from @BotFather on Telegram.</text>
+              </box>
             )}
             placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
             onConfirm={(v) => {
