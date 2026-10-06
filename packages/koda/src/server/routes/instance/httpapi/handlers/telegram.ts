@@ -5,25 +5,30 @@ import { InstanceHttpApi } from "../api"
 
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
-    const connect = Effect.fn("TelegramHttpApi.connect")((ctx: { payload: { token: string; adminId: string } }) => {
-      const svc = getTelegramService()
-      // Plain promise chain: Effect.promise() turns rejections into defects
-      // ("Unexpected server error"). Catch here and return error in response.
-      return Effect.promise(() =>
-        svc
-          .connect(ctx.payload.token, ctx.payload.adminId)
-          .then((result) => ({
-            username: result.username as string | undefined,
+    const connect = Effect.fn("TelegramHttpApi.connect")(
+      (ctx: { payload: { token: string; adminId: string } }) => {
+        const svc = getTelegramService()
+        // tryPromise converts rejection to a typed failure (not a defect),
+        // then we map it to a success response carrying the error message.
+        return Effect.tryPromise({
+          try: () => svc.connect(ctx.payload.token, ctx.payload.adminId),
+          catch: (err) => (err instanceof Error ? err : new Error("Telegram connection failed")),
+        }).pipe(
+          Effect.map((r) => ({
+            username: r.username as string | undefined,
             connected: true,
             error: undefined as string | undefined,
-          }))
-          .catch((err: unknown) => ({
-            username: undefined as string | undefined,
-            connected: false,
-            error: err instanceof Error ? err.message : "Telegram connection failed",
           })),
-      )
-    })
+          Effect.catch((err: Error) =>
+            Effect.succeed({
+              username: undefined as string | undefined,
+              connected: false,
+              error: err.message,
+            }),
+          ),
+        )
+      },
+    )
 
     const disconnect = Effect.fn("TelegramHttpApi.disconnect")(function* () {
       const svc = getTelegramService()
