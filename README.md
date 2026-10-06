@@ -104,7 +104,7 @@ koda run --continue "Now add integration tests"
 
 ## Deep Research
 
-Koda includes a powerful deep research engine inspired by [dzhng/deep-research](https://github.com/dzhng/deep-research):
+Koda includes a powerful deep research engine for multi-stage investigation:
 
 ```bash
 # In TUI, use the deep_research tool or:
@@ -228,7 +228,6 @@ This project is licensed under the MIT License — see the [LICENSE](./LICENSE) 
 
 ## Acknowledgments
 
-- Research methodology inspired by [dzhng/deep-research](https://github.com/dzhng/deep-research)
 - Built on the [AI SDK](https://sdk.vercel.ai/) by Vercel
 - Terminal UI powered by [OpenTUI](https://github.com/sst/opentui)
 
