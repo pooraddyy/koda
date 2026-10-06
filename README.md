@@ -10,6 +10,10 @@
 
 **Write code, run commands, and ship faster — directly from your terminal.**
 
+```bash
+curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
+```
+
 [Installation](#installation) · [Features](#features) · [Quick Start](#quick-start) · [Documentation](#configuration) · [Contributing](#contributing)
 
 </div>
