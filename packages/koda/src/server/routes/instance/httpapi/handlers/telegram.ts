@@ -1,59 +1,22 @@
-import { getTelegramService } from "@/telegram/service"
+import { getTelegramService, type LLMConfig } from "@/telegram/service"
 import { Config } from "@/config/config"
-import { SessionPrompt } from "@/session/prompt"
-import { SessionShare } from "@/share/session"
-import { Effect, Context } from "effect"
+import { Auth } from "@/auth"
+import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 
 type TelegramSvc = ReturnType<typeof getTelegramService>
 
 /**
- * Wire TelegramService callbacks to the agent system.
- * Captures the handler's full Effect context so callbacks (plain async functions)
- * can run Effects with all required services (SessionPrompt, SessionShare, etc.).
- * Uses the same model/provider config as the TUI (from global config).
+ * Wire TelegramService callbacks.
+ * Uses direct LLM calls (plain fetch) with the same model/provider as TUI.
+ * No Effect context needed in callbacks — config is captured at connect time.
  */
-function wireBotCallbacks(svc: TelegramSvc, ctx: Context.Context<any>) {
-  const run = <A, E>(effect: Effect.Effect<A, E, any>): Promise<A> =>
-    Effect.runPromise(Effect.provide(effect, ctx) as Effect.Effect<A, E, never>)
-
-  const extractText = (result: unknown): string => {
-    const texts: string[] = []
-    for (const part of ((result as any)?.parts ?? [])) {
-      if (part?.type === "text" && part.text) texts.push(part.text)
-    }
-    return texts.join("\n").trim() || "(no response)"
-  }
-
-  const getOrCreateSession = (chatId: number) =>
-    Effect.gen(function* () {
-      const shareSvc = yield* SessionShare.Service
-      let sessionID = svc.getChatSession(chatId)
-      if (!sessionID) {
-        const session = yield* shareSvc.create({ title: `Telegram chat ${chatId}` })
-        sessionID = session.id
-        svc.setChatSession(chatId, sessionID)
-      }
-      return sessionID
-    })
-
-  // Direct chat: run the agent and return its response
+function wireBotCallbacks(svc: TelegramSvc) {
+  // Direct chat: LLM response via direct API call
   svc.onChat(async (text, chatId): Promise<string> => {
     try {
-      const result: string = await run(
-        Effect.gen(function* () {
-          const promptSvc = yield* SessionPrompt.Service
-          const sessionID = yield* getOrCreateSession(chatId)
-          // Prompt the agent (uses the configured model, same as TUI)
-          const response = yield* promptSvc.prompt({
-            sessionID: sessionID as any,
-            parts: [{ type: "text", text } as any],
-          })
-          return extractText(response)
-        }) as Effect.Effect<string, unknown, never>,
-      )
-      return result
+      return await svc.chatWithLLM(text, chatId)
     } catch (err) {
       return `Error: ${err instanceof Error ? err.message : "unknown error"}`
     }
@@ -61,41 +24,65 @@ function wireBotCallbacks(svc: TelegramSvc, ctx: Context.Context<any>) {
 
   // Research requests from /research command
   svc.onResearch(async (topic, chatId, task) => {
-    await run(
-      Effect.gen(function* () {
-        const promptSvc = yield* SessionPrompt.Service
-        const sessionID = yield* getOrCreateSession(chatId)
-        const response = yield* promptSvc.prompt({
-          sessionID: sessionID as any,
-          parts: [
-            {
-              type: "text",
-              text: `Deep research request: ${topic}\n\nProvide a comprehensive research report on this topic.`,
-            } as any,
-          ],
-        })
-        const text = extractText(response)
-        yield* Effect.tryPromise({
-          try: () => svc.sendMessage(chatId, `Research complete for "${topic}":\n\n${text}`),
-          catch: () => new Error("send failed"),
-        }).pipe(Effect.ignore)
-        svc.updateTaskProgress(task.id)
-      }).pipe(Effect.ignore),
-    )
+    try {
+      const response = await svc.chatWithLLM(
+        `Deep research request: ${topic}\n\nProvide a comprehensive research report on this topic.`,
+        chatId,
+      )
+      await svc.sendMessage(chatId, `Research complete for "${topic}":\n\n${response}`)
+      svc.updateTaskProgress(task.id)
+    } catch (err) {
+      await svc
+        .sendMessage(chatId, `Research error: ${err instanceof Error ? err.message : "unknown"}`)
+        .catch(() => {})
+    }
   })
 }
+
+/**
+ * Build LLM config from global config + auth.
+ * Returns null if no model/provider is configured.
+ */
+const buildLLMConfig = Effect.fn("TelegramHttpApi.buildLLMConfig")(function* () {
+  const configSvc = yield* Config.Service
+  const authSvc = yield* Auth.Service
+  const global = yield* configSvc.getGlobal()
+
+  const modelStr = (global as any).model as string | undefined
+  if (!modelStr) return null
+
+  // model format: "providerId/modelId"
+  const slashIdx = modelStr.indexOf("/")
+  if (slashIdx < 0) return null
+  const providerId = modelStr.slice(0, slashIdx)
+  const modelId = modelStr.slice(slashIdx + 1)
+
+  const providers = (global as any).provider as Record<string, any> | undefined
+  const providerCfg = providers?.[providerId]
+  if (!providerCfg) return null
+
+  // Get baseURL from provider options
+  const baseURL = providerCfg.options?.baseURL as string | undefined
+  if (!baseURL) return null
+
+  // Get API key from auth storage
+  const authInfo = yield* authSvc.get(providerId).pipe(Effect.orElseSucceed(() => undefined))
+  const apiKey = (authInfo as any)?.key as string | undefined
+  if (!apiKey) return null
+
+  const cfg: LLMConfig = { providerId, modelId, baseURL, apiKey }
+  return cfg
+})
 
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
     const configSvc = yield* Config.Service
-    // Capture the full Effect context for bot callbacks (plain async functions)
-    const effectCtx = yield* Effect.context<any>()
 
     /**
      * Try to auto-reconnect using saved credentials from global config.
      * Called lazily when the service is not connected.
      */
-    const ensureConnected = (): Effect.Effect<void> =>
+    const ensureConnected = (): Effect.Effect<void, never, any> =>
       Effect.gen(function* () {
         const svc = getTelegramService()
         if (svc.isConnected()) return
@@ -107,7 +94,14 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
             try: () => svc2.connect(tg.token!, tg.adminId!),
             catch: (err) => (err instanceof Error ? err : new Error("auto-reconnect failed")),
           }).pipe(
-            Effect.tap(() => Effect.sync(() => wireBotCallbacks(svc2, effectCtx))),
+            Effect.tap(() =>
+              Effect.gen(function* () {
+                wireBotCallbacks(svc2)
+                // Capture LLM config for bot replies
+                const llmCfg = yield* buildLLMConfig().pipe(Effect.orElseSucceed(() => null))
+                svc2.setLLMConfig(llmCfg)
+              }),
+            ),
             Effect.ignore, // Don't fail if auto-reconnect fails (e.g. revoked token)
           )
         }
@@ -126,7 +120,10 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
         Effect.tap(() =>
           Effect.gen(function* () {
             const svc = getTelegramService()
-            wireBotCallbacks(svc, effectCtx)
+            wireBotCallbacks(svc)
+            // Capture LLM config for bot replies (same model as TUI)
+            const llmCfg = yield* buildLLMConfig().pipe(Effect.orElseSucceed(() => null))
+            svc.setLLMConfig(llmCfg)
             // Persist credentials to global config for auto-reconnect across restarts
             yield* configSvc.updateGlobal({
               telegram: { token: ctx.payload.token, adminId: ctx.payload.adminId },
@@ -153,6 +150,7 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
       const svc = getTelegramService()
       svc.disconnect()
       svc.clearChatSessions()
+      svc.setLLMConfig(null)
       // Clear persisted credentials
       yield* configSvc.updateGlobal({ telegram: undefined } as any).pipe(Effect.ignore)
       return { disconnected: true }

@@ -19,6 +19,13 @@ export interface ResearchTask {
   status: "running" | "stopped" | "completed"
 }
 
+export interface LLMConfig {
+  providerId: string
+  modelId: string
+  baseURL: string
+  apiKey: string
+}
+
 /**
  * Telegram integration service.
  * Manages bot connection, command handling, and research task updates.
@@ -26,11 +33,14 @@ export interface ResearchTask {
 export class TelegramService {
   private bot: TelegramBot | null = null
   private config: TelegramConfig | null = null
+  private llmConfig: LLMConfig | null = null
   private researchTasks = new Map<string, ResearchTask>()
   private onResearchRequest: ((topic: string, chatId: number, task: ResearchTask) => Promise<void>) | null = null
   private onChatMessage: ((text: string, chatId: number) => Promise<string>) | null = null
   // Maps Telegram chatId -> koda sessionID for persistent conversation context
   private chatSessions = new Map<number, string>()
+  // Conversation history per chat (for direct LLM calls)
+  private chatHistory = new Map<number, Array<{ role: string; content: string }>>()
 
   async connect(token: string, adminId: string): Promise<{ username?: string }> {
     const bot = new TelegramBot(token)
@@ -224,6 +234,69 @@ export class TelegramService {
 
   clearChatSessions(): void {
     this.chatSessions.clear()
+    this.chatHistory.clear()
+  }
+
+  setLLMConfig(cfg: LLMConfig | null): void {
+    this.llmConfig = cfg
+  }
+
+  getLLMConfig(): LLMConfig | null {
+    return this.llmConfig
+  }
+
+  /**
+   * Direct LLM call using the configured provider (OpenAI-compatible).
+   * Uses plain fetch — no Effect context required.
+   * Maintains conversation history per chat.
+   */
+  async chatWithLLM(text: string, chatId: number): Promise<string> {
+    if (!this.llmConfig) {
+      throw new Error("LLM not configured. Connect a provider in the TUI first.")
+    }
+    const { baseURL, apiKey, modelId } = this.llmConfig
+
+    // Get or init history
+    let history = this.chatHistory.get(chatId)
+    if (!history) {
+      history = []
+      this.chatHistory.set(chatId, history)
+    }
+    history.push({ role: "user", content: text })
+    // Keep last 20 messages to bound context
+    if (history.length > 20) history.splice(0, history.length - 20)
+
+    const url = `${baseURL.replace(/\/$/, "")}/chat/completions`
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          {
+            role: "system",
+            content: "You are Koda, a helpful AI coding assistant. Respond concisely and helpfully.",
+          },
+          ...history,
+        ],
+      }),
+    })
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "unknown")
+      throw new Error(`LLM request failed: ${res.status} ${errText.slice(0, 200)}`)
+    }
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>
+      error?: { message?: string }
+    }
+    if (data.error) throw new Error(`LLM error: ${data.error.message}`)
+    const reply = data.choices?.[0]?.message?.content?.trim()
+    if (!reply) throw new Error("LLM returned empty response")
+    history.push({ role: "assistant", content: reply })
+    return reply
   }
 
   getRunningTasks(): ResearchTask[] {
