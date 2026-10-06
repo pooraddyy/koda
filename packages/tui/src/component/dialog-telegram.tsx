@@ -65,6 +65,26 @@ function TelegramAdminInput(props: { token: string }) {
 
   const connectBot = async (botToken: string, adminId: string) => {
     dialog.replace(() => <TelegramWorking />)
+    // First, test direct network access from koda process
+    try {
+      const testRes = await fetch(`https://api.telegram.org/bot${botToken}/getMe`)
+      const testData = (await testRes.json()) as { ok: boolean; description?: string }
+      if (!testData.ok) {
+        toast.show({
+          message: `Connection failed: Invalid bot token (${testData.description ?? "rejected by Telegram"})`,
+          variant: "error",
+        })
+        dialog.replace(() => <TelegramMenu />)
+        return
+      }
+    } catch (netErr) {
+      toast.show({
+        message: `Connection failed: koda cannot reach Telegram API (${netErr instanceof Error ? netErr.message : "network error"})`,
+        variant: "error",
+      })
+      dialog.replace(() => <TelegramMenu />)
+      return
+    }
     try {
       const result = await sdk.client.telegram.connect(
         { telegramConnectInput: { token: botToken, adminId } },
@@ -85,8 +105,12 @@ function TelegramAdminInput(props: { token: string }) {
       })
       dialog.clear()
     } catch (err) {
+      // Extract ref ID and details for debugging
+      const cause = err instanceof Error ? (err as any).cause : undefined
+      const ref = cause?.body?.data?.ref || cause?.body?.ref || ""
+      const detail = ref ? ` (ref: ${ref})` : ""
       toast.show({
-        message: `Connection failed: ${err instanceof Error ? err.message : "unknown error"}`,
+        message: `Connection failed: ${err instanceof Error ? err.message : "unknown error"}${detail}`,
         variant: "error",
       })
       dialog.replace(() => <TelegramMenu />)
