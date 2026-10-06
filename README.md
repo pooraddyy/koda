@@ -14,6 +14,8 @@
 
 </div>
 
+> **Note:** Koda is built using [OpenCode](https://github.com/sst/opencode) as its foundation. This is a beta version — you may encounter bugs, glitches, or unexpected behavior. Please report issues on the [issues page](https://github.com/pooraddyy/koda/issues).
+
 ---
 
 ## Overview
