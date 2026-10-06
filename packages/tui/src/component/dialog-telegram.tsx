@@ -1,9 +1,9 @@
-import { createSignal, Show } from "solid-js"
+import { createSignal, Show, For } from "solid-js"
 import { useDialog } from "../ui/dialog"
 import { useToast } from "../ui/toast"
-import { DialogSelect } from "../ui/dialog-select"
 import { DialogPrompt } from "../ui/dialog-prompt"
 import { useSDK } from "../context/sdk"
+import { useBindings } from "../keymap"
 
 export function DialogTelegram() {
   const dialog = useDialog()
@@ -12,6 +12,13 @@ export function DialogTelegram() {
   const [step, setStep] = createSignal<"menu" | "token" | "adminId" | "working" | "status">("menu")
   const [token, setToken] = createSignal("")
   const [statusInfo, setStatusInfo] = createSignal("")
+  const [selectedIndex, setSelectedIndex] = createSignal(0)
+
+  const menuItems = [
+    { id: "connect", title: "Connect Bot", desc: "Enter bot token and admin ID" },
+    { id: "disconnect", title: "Disconnect", desc: "Disconnect the Telegram bot" },
+    { id: "status", title: "Status", desc: "Check connection status" },
+  ]
 
   const connectBot = async (botToken: string, adminId: string) => {
     setStep("working")
@@ -68,29 +75,40 @@ export function DialogTelegram() {
     }
   }
 
-  const menuOptions = () => [
-    {
-      value: "connect",
-      title: "Connect Bot",
-      description: "Enter bot token and admin ID to connect",
-    },
-    {
-      value: "disconnect",
-      title: "Disconnect",
-      description: "Disconnect the Telegram bot",
-    },
-    {
-      value: "status",
-      title: "Status",
-      description: "Check Telegram connection status",
-    },
-  ]
-
-  const handleMenuSelect = (option: { value: string }) => {
-    if (option.value === "connect") setStep("token")
-    else if (option.value === "disconnect") disconnectBot()
-    else if (option.value === "status") checkStatus()
+  const selectItem = (index: number) => {
+    const item = menuItems[index]
+    if (!item) return
+    if (item.id === "connect") setStep("token")
+    else if (item.id === "disconnect") disconnectBot()
+    else if (item.id === "status") checkStatus()
   }
+
+  // Keyboard bindings for menu
+  useBindings(() => ({
+    commands: [
+      {
+        name: "telegram.menu.up",
+        run: () => {
+          if (step() !== "menu") return
+          setSelectedIndex((i) => (i > 0 ? i - 1 : menuItems.length - 1))
+        },
+      },
+      {
+        name: "telegram.menu.down",
+        run: () => {
+          if (step() !== "menu") return
+          setSelectedIndex((i) => (i < menuItems.length - 1 ? i + 1 : 0))
+        },
+      },
+      {
+        name: "telegram.menu.select",
+        run: () => {
+          if (step() !== "menu") return
+          selectItem(selectedIndex())
+        },
+      },
+    ],
+  }))
 
   return (
     <Show when={step() === "menu"} fallback={
@@ -104,6 +122,7 @@ export function DialogTelegram() {
             <box flexDirection="column" gap={1} padding={1}>
               <text>Telegram Status</text>
               <text>{statusInfo()}</text>
+              <text>Press ESC to close</text>
             </box>
           </Show>
         }>
@@ -146,11 +165,28 @@ export function DialogTelegram() {
         />
       </Show>
     }>
-      <DialogSelect
-        title="Telegram Bot"
-        options={menuOptions()}
-        onSelect={handleMenuSelect}
-      />
+      <box flexDirection="column" padding={1} gap={1}>
+        <text>Telegram Bot</text>
+        <box flexDirection="column">
+          <For each={menuItems}>
+            {(item, index) => (
+              <box
+                flexDirection="row"
+                gap={2}
+                backgroundColor={selectedIndex() === index() ? "blue" : undefined}
+                onMouseUp={() => selectItem(index())}
+              >
+                <text>{selectedIndex() === index() ? ">" : " "}</text>
+                <box flexDirection="column">
+                  <text>{item.title}</text>
+                  <text>{item.desc}</text>
+                </box>
+              </box>
+            )}
+          </For>
+        </box>
+        <text>Use arrow keys + Enter, or click</text>
+      </box>
     </Show>
   )
 }
