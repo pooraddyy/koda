@@ -5,19 +5,24 @@ import { InstanceHttpApi } from "../api"
 
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
-    const connect = Effect.fn("TelegramHttpApi.connect")(function* (ctx) {
+    const connect = Effect.fn("TelegramHttpApi.connect")((ctx: { payload: { token: string; adminId: string } }) => {
       const svc = getTelegramService()
-      try {
-        const result = yield* Effect.promise(() => svc.connect(ctx.payload.token, ctx.payload.adminId))
-        return { username: result.username, connected: true, error: undefined as string | undefined }
-      } catch (err) {
-        // Return error in response instead of throwing, so TUI gets the actual message
-        return {
-          username: undefined as string | undefined,
-          connected: false,
-          error: err instanceof Error ? err.message : "Telegram connection failed",
-        }
-      }
+      // Plain promise chain: Effect.promise() turns rejections into defects
+      // ("Unexpected server error"). Catch here and return error in response.
+      return Effect.promise(() =>
+        svc
+          .connect(ctx.payload.token, ctx.payload.adminId)
+          .then((result) => ({
+            username: result.username as string | undefined,
+            connected: true,
+            error: undefined as string | undefined,
+          }))
+          .catch((err: unknown) => ({
+            username: undefined as string | undefined,
+            connected: false,
+            error: err instanceof Error ? err.message : "Telegram connection failed",
+          })),
+      )
     })
 
     const disconnect = Effect.fn("TelegramHttpApi.disconnect")(function* () {
