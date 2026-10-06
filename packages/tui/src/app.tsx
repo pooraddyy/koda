@@ -831,7 +831,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         name: "docs.open",
         title: "Open docs",
         run: () => {
-          openUrl("https://koda.ai/docs").catch(() => {})
+          openUrl("https://github.com/pooraddyy/koda").catch(() => {})
           dialog.clear()
         },
         category: "System",
