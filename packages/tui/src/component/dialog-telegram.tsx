@@ -154,7 +154,7 @@ function TelegramStatus() {
   // Fetch status on mount
   void (async () => {
     try {
-      const result = await sdk.client.telegram.status({ throwOnError: true })
+      const result = await sdk.client.telegram.status({}, { throwOnError: true })
       const text = result.data.connected
         ? `Connected. ${result.data.runningTasks} active research task(s).`
         : "Not connected."
@@ -189,7 +189,7 @@ function TelegramDisconnect() {
 
   void (async () => {
     try {
-      await sdk.client.telegram.disconnect({ throwOnError: true })
+      await sdk.client.telegram.disconnect({}, { throwOnError: true })
       toast.show({ message: "Telegram bot disconnected", variant: "success" })
       dialog.clear()
     } catch (err) {

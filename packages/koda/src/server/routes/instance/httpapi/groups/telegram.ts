@@ -3,6 +3,7 @@ import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { Authorization } from "../middleware/authorization"
 import { InstanceContextMiddleware } from "../middleware/instance-context"
+import { WorkspaceRoutingMiddleware, WorkspaceRoutingQuery } from "../middleware/workspace-routing"
 import { described } from "./metadata"
 
 const root = "/telegram"
@@ -28,6 +29,7 @@ export const TelegramApi = HttpApi.make("telegram").add(
     .add(
       HttpApiEndpoint.post("connect", `${root}/connect`, {
         payload: TelegramConnectInput,
+        query: WorkspaceRoutingQuery,
         success: described(TelegramConnectResult, "Telegram connected"),
         error: HttpApiError.BadRequest,
       }).annotateMerge(
@@ -40,6 +42,7 @@ export const TelegramApi = HttpApi.make("telegram").add(
     )
     .add(
       HttpApiEndpoint.post("disconnect", `${root}/disconnect`, {
+        query: WorkspaceRoutingQuery,
         success: described(Schema.Struct({ disconnected: Schema.Boolean }), "Telegram disconnected"),
       }).annotateMerge(
         OpenApi.annotations({
@@ -51,6 +54,7 @@ export const TelegramApi = HttpApi.make("telegram").add(
     )
     .add(
       HttpApiEndpoint.get("status", `${root}/status`, {
+        query: WorkspaceRoutingQuery,
         success: described(TelegramStatusResult, "Telegram status"),
       }).annotateMerge(
         OpenApi.annotations({
@@ -60,6 +64,7 @@ export const TelegramApi = HttpApi.make("telegram").add(
         }),
       ),
     )
-    .middleware(Authorization)
-    .middleware(InstanceContextMiddleware),
+    .middleware(InstanceContextMiddleware)
+    .middleware(WorkspaceRoutingMiddleware)
+    .middleware(Authorization),
 )

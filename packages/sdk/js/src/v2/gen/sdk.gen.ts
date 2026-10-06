@@ -4589,11 +4589,24 @@ export class Telegram extends HeyApiClient {
    */
   public connect<ThrowOnError extends boolean = false>(
     parameters?: {
+      directory?: string
+      workspace?: string
       telegramConnectInput?: TelegramConnectInput
     },
     options?: Options<never, ThrowOnError>,
   ) {
-    const params = buildClientParams([parameters], [{ args: [{ key: "telegramConnectInput", map: "body" }] }])
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "telegramConnectInput", map: "body" },
+          ],
+        },
+      ],
+    )
     return (options?.client ?? this.client).post<TelegramConnectResponses, TelegramConnectErrors, ThrowOnError>({
       url: "/telegram/connect",
       ...options,
@@ -4611,10 +4624,28 @@ export class Telegram extends HeyApiClient {
    *
    * Disconnect the Telegram bot.
    */
-  public disconnect<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+  public disconnect<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
     return (options?.client ?? this.client).post<TelegramDisconnectResponses, TelegramDisconnectErrors, ThrowOnError>({
       url: "/telegram/disconnect",
       ...options,
+      ...params,
     })
   }
 
@@ -4623,10 +4654,28 @@ export class Telegram extends HeyApiClient {
    *
    * Get Telegram bot connection status.
    */
-  public status<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+  public status<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
     return (options?.client ?? this.client).get<TelegramStatusResponses, TelegramStatusErrors, ThrowOnError>({
       url: "/telegram/status",
       ...options,
+      ...params,
     })
   }
 }

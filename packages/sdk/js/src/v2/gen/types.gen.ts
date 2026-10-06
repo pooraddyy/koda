@@ -10637,7 +10637,10 @@ export type SyncHistoryListResponse = SyncHistoryListResponses[keyof SyncHistory
 export type TelegramConnectData = {
   body?: TelegramConnectInput
   path?: never
-  query?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
   url: "/telegram/connect"
 }
 
@@ -10662,7 +10665,10 @@ export type TelegramConnectResponse = TelegramConnectResponses[keyof TelegramCon
 export type TelegramDisconnectData = {
   body?: never
   path?: never
-  query?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
   url: "/telegram/disconnect"
 }
 
@@ -10689,7 +10695,10 @@ export type TelegramDisconnectResponse = TelegramDisconnectResponses[keyof Teleg
 export type TelegramStatusData = {
   body?: never
   path?: never
-  query?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
   url: "/telegram/status"
 }
 
