@@ -2,160 +2,242 @@
 
 # Koda
 
-**The terminal AI coding agent.**
+### The Terminal AI Coding Agent
 
 [![Release](https://img.shields.io/github/v/release/pooraddyy/koda?style=flat-square)](https://github.com/pooraddyy/koda/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/pooraddyy/koda/publish.yml?style=flat-square&branch=dev)](https://github.com/pooraddyy/koda/actions)
 [![License](https://img.shields.io/github/license/pooraddyy/koda?style=flat-square)](./LICENSE)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey?style=flat-square)](https://github.com/pooraddyy/koda/releases)
 
-Write code, run commands, and ship faster — right from your terminal.
+**Write code, run commands, and ship faster — directly from your terminal.**
+
+[Installation](#installation) · [Features](#features) · [Quick Start](#quick-start) · [Documentation](#configuration) · [Contributing](#contributing)
 
 </div>
 
 ---
 
+## Overview
+
+Koda is a terminal-native AI coding agent that brings the power of large language models directly into your development workflow. No browser tabs, no context switching — just you, your terminal, and an intelligent assistant that understands your codebase.
+
+Built for developers who live in the terminal, Koda combines agentic code editing, shell execution, web research, and project management into a single, fast, keyboard-driven interface.
+
 ## Features
 
-- **Terminal-first** — a full AI coding agent that lives in your terminal, no browser or desktop app needed
-- **100+ LLM providers** — works with Anthropic, OpenAI, Google, and any OpenAI-compatible API
-- **Agentic tools** — file editing, bash execution, web search, LSP-powered navigation, and more
-- **Model Context Protocol** — connect any MCP server to extend Koda's capabilities
-- **Sessions** — every conversation is saved, resumable, shareable, and exportable
-- **Custom agents** — built-in `build` and `plan` agents, plus your own via config
-- **Headless mode** — run it non-interactively in scripts and CI with `koda run`
+### Core Capabilities
+
+| Feature | Description |
+|---------|-------------|
+| **Agentic Coding** | Autonomous code editing, refactoring, and generation with LSP-powered diagnostics |
+| **100+ LLM Providers** | Native support for Anthropic, OpenAI, Google, and any OpenAI-compatible API |
+| **Custom Providers** | Connect any OpenAI-compatible endpoint via the `/connect` wizard |
+| **Deep Research** | Multi-stage research combining web search, content extraction, and synthesis |
+| **Telegram Integration** | Control Koda remotely via Telegram bot with background task updates |
+| **Background Agents** | Run subagents asynchronously while you continue working |
+| **Session Management** | Persistent, resumable, and shareable coding sessions |
+| **Checkpoints** | Snapshot-based revert for any point in your session |
+| **MCP Support** | Extend capabilities with any Model Context Protocol server |
+
+### Developer Experience
+
+- **Terminal-First Design** — Beautiful TUI with keyboard-driven navigation
+- **LSP Integration** — Real-time diagnostics feed back into the agent automatically
+- **Headless Mode** — Run non-interactively in scripts and CI pipelines
+- **Custom Agents** — Define specialized subagents for your workflow
+- **Long-Running Tasks** — Bash commands support up to 2-hour timeouts for builds and tests
 
 ## Installation
+
+### Quick Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
 ```
 
-<details>
-<summary>More install options</summary>
+### Manual Installation
 
-<br>
+Download the latest release for your platform from the [releases page](https://github.com/pooraddyy/koda/releases).
 
-**Custom install directory:**
+**Available platforms:**
+- Linux x64
+- macOS (ARM64, x64)
+- Windows x64
 
-```bash
-KODA_INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
-```
-
-The installer picks the directory in this order: `$KODA_INSTALL_DIR` → `$XDG_BIN_DIR` → `$HOME/bin` → `$HOME/.koda/bin`.
-
-**Specific version:**
+### Build from Source
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash -s -- --version 1.0.180
+git clone https://github.com/pooraddyy/koda.git
+cd koda
+bun install
+bun run build
 ```
-
-**From a local binary:**
-
-```bash
-./install.sh --binary /path/to/koda
-```
-
-</details>
 
 ## Quick Start
 
+1. **Launch Koda:**
+   ```bash
+   koda
+   ```
+
+2. **Connect a provider:**
+   Type `/connect` and follow the wizard, or choose from 100+ built-in providers.
+
+3. **Start coding:**
+   ```
+   > Refactor the authentication module to use JWT tokens
+   > Add unit tests for the payment processor
+   > Research the latest React Server Components patterns
+   ```
+
+### Headless Mode
+
 ```bash
-# Start the interactive TUI (default)
-koda
+# Single prompt
+koda run "Explain this codebase structure"
 
-# Run a one-shot prompt without the TUI
-koda run "explain this codebase"
+# With specific model
+koda run --model anthropic/claude-sonnet-4 "Fix the failing tests"
 
-# Continue where you left off
-koda run --continue "now add tests"
+# Continue last session
+koda run --continue "Now add integration tests"
 ```
 
-On first run, Koda walks you through connecting a provider. You can also manage providers anytime:
+## Deep Research
+
+Koda includes a powerful deep research engine inspired by [dzhng/deep-research](https://github.com/dzhng/deep-research):
 
 ```bash
-koda providers   # add / remove AI providers and credentials (alias: auth)
-koda models      # list available models
+# In TUI, use the deep_research tool or:
+/research artificial intelligence trends in 2026
 ```
 
-## Commands
+**How it works:**
+1. Generates diverse search queries covering multiple angles
+2. Searches the web and extracts content from top sources
+3. Identifies key learnings, metrics, and entities
+4. Follows up with deeper queries on interesting threads
+5. Synthesizes everything into a comprehensive report with sources
 
-| Command | Description |
-| ------- | ----------- |
-| `koda [project]` | Start the interactive TUI (default) |
-| `koda run [message..]` | Run Koda with a message, non-interactively |
-| `koda serve` | Start a headless Koda server |
-| `koda attach <url>` | Attach to a running Koda server |
-| `koda session` | Manage sessions |
-| `koda agent` | Manage agents |
-| `koda mcp` | Manage MCP (Model Context Protocol) servers |
-| `koda acp` | Start ACP (Agent Client Protocol) server |
-| `koda providers` | Manage AI providers and credentials |
-| `koda models [provider]` | List all available models |
-| `koda plugin <module>` | Install a plugin |
-| `koda export [sessionID]` | Export session data as JSON |
-| `koda import <file>` | Import session data from a JSON file or URL |
-| `koda stats` | Show token usage and cost statistics |
-| `koda upgrade [target]` | Upgrade Koda to the latest or a specific version |
-| `koda uninstall` | Uninstall Koda and remove all related files |
-| `koda github` | Manage the GitHub agent |
-| `koda pr <number>` | Fetch a GitHub PR branch, then run Koda |
-| `koda debug` | Debugging and troubleshooting tools |
-| `koda db` | Database tools |
-| `koda completion` | Generate shell completion script |
+**Parameters:**
+- `breadth` (1-10): Number of angles to explore (default: 3)
+- `depth` (1-3): Follow-up research depth (default: 2)
 
-Run `koda <command> --help` for details on any command.
+## Telegram Integration
+
+Control Koda remotely via Telegram:
+
+1. **Connect:** Use the Telegram setup dialog in TUI (bot token from [@BotFather](https://t.me/BotFather), admin ID from [@userinfobot](https://t.me/userinfobot))
+
+2. **Commands:**
+   ```
+   /research <topic>          Start deep research
+   /research <topic> | 2h     Research with 2-hour limit
+   /research <topic> | 30m    Updates every 30 minutes
+   /stop                      Stop all research tasks
+   /status                    Show active tasks
+   /help                      Show all commands
+   ```
+
+3. **Direct Chat:** Send any message to chat with Koda directly
+
+**Background Updates:** Research tasks run as background subagents and send periodic progress updates to Telegram based on your configured interval.
 
 ## Configuration
 
-Koda is configured via `koda.json` in your project or global config directory:
+Koda uses `koda.json` for configuration:
 
 ```json
 {
-  "$schema": "https://models.koda.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-20250514",
-  "theme": "system"
+  "provider": {
+    "my-custom": {
+      "name": "My Provider",
+      "npm": "@ai-sdk/openai-compatible",
+      "env": ["MY_API_KEY"],
+      "options": {
+        "baseURL": "https://api.example.com/v1"
+      },
+      "models": {
+        "my-model": {
+          "name": "My Model"
+        }
+      }
+    }
+  },
+  "theme": "kilo",
+  "model": "anthropic/claude-sonnet-4"
 }
 ```
 
-See the [example config](./.koda/koda.jsonc) in this repo for all available options.
+**Config locations:**
+- Global: `~/.config/koda/koda.json`
+- Project: `./koda.json` (or `.koda/koda.json`)
 
-## Agents
+## Keyboard Shortcuts
 
-Koda ships with two built-in agents — switch between them with the `Tab` key:
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+P` | Command palette |
+| `Ctrl+O` | Model selector |
+| `Tab` | Accept suggestion |
+| `Esc` | Cancel / Go back |
+| `/` | Slash commands |
+| `@` | File mentions |
 
-| Agent | Description |
-| ----- | ----------- |
-| `build` | Default agent with full access for development work |
-| `plan` | Read-only agent for analysis and exploration — denies edits, asks before running commands |
+Type `/help` in Koda for the full command list.
 
-A `general` subagent is also available for complex searches and multi-step tasks (invoke with `@general`).
+## Architecture
 
-## Development
-
-```bash
-# Install dependencies
-bun install
-
-# Build the binary
-cd packages/koda && bun ./script/build.ts
-
-# Run it
-./packages/koda/dist/koda-linux-x64/bin/koda --help
-
-# Run tests
-bun test
-
-# Typecheck
-bun typecheck
+```
+koda/
+├── packages/
+│   ├── koda/          # Core agent logic, tools, sessions
+│   ├── tui/           # Terminal user interface (SolidJS)
+│   ├── core/          # Shared utilities, tools, effects
+│   └── ...            # Supporting packages
+├── install.sh         # Installation script
+└── README.md
 ```
 
-Requires [Bun](https://bun.sh). See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+**Key components:**
+- **Agent Engine** (`packages/koda`) — Session management, tool orchestration, LLM integration
+- **TUI** (`packages/tui`) — Reactive terminal interface built with OpenTUI
+- **Tools** — File editing, bash execution, web search, LSP, deep research, Telegram
+- **Providers** — Unified interface for 100+ LLM providers via AI SDK
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting a pull request.
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**Development setup:**
+```bash
+git clone https://github.com/pooraddyy/koda.git
+cd koda
+bun install
+bun run dev
+```
 
 ## License
 
-[MIT](./LICENSE) — Copyright (c) 2025 koda.
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
+
+## Acknowledgments
+
+- Research methodology inspired by [dzhng/deep-research](https://github.com/dzhng/deep-research)
+- Built on the [AI SDK](https://sdk.vercel.ai/) by Vercel
+- Terminal UI powered by [OpenTUI](https://github.com/sst/opentui)
+
+---
+
+<div align="center">
+
+**Built for developers who live in the terminal.**
+
+[Report Bug](https://github.com/pooraddyy/koda/issues) · [Request Feature](https://github.com/pooraddyy/koda/issues) · [Releases](https://github.com/pooraddyy/koda/releases)
+
+</div>
