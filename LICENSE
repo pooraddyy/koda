@@ -1,6 +1,9 @@
 MIT License
 
-Copyright (c) 2025 koda
+Copyright (c) 2026 pooraddyy
+
+Koda is built on [OpenCode](https://github.com/sst/opencode) by SST.
+Original OpenCode copyright holders retain their rights to the underlying code.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
