@@ -16,12 +16,12 @@ export function DialogTelegram() {
   const connectBot = async (botToken: string, adminId: string) => {
     setStep("working")
     try {
-      const result = await (sdk.client as any).telegram.connect(
-        { token: botToken, adminId },
+      const result = await sdk.client.telegram.connect(
+        { telegramConnectInput: { token: botToken, adminId } },
         { throwOnError: true },
       )
       toast.show({
-        message: result.username ? `Connected to @${result.username}` : "Telegram bot connected",
+        message: result.data.username ? `Connected to @${result.data.username}` : "Telegram bot connected",
         variant: "success",
       })
       dialog.clear()
@@ -37,7 +37,7 @@ export function DialogTelegram() {
   const disconnectBot = async () => {
     setStep("working")
     try {
-      await (sdk.client as any).telegram.disconnect({}, { throwOnError: true })
+      await sdk.client.telegram.disconnect({ throwOnError: true })
       toast.show({ message: "Telegram bot disconnected", variant: "success" })
       dialog.clear()
     } catch (err) {
@@ -52,10 +52,10 @@ export function DialogTelegram() {
   const checkStatus = async () => {
     setStep("working")
     try {
-      const result = await (sdk.client as any).telegram.status({}, { throwOnError: true })
+      const result = await sdk.client.telegram.status({ throwOnError: true })
       setStatusInfo(
-        result.connected
-          ? `Connected. ${result.runningTasks} active research task(s).`
+        result.data.connected
+          ? `Connected. ${result.data.runningTasks} active research task(s).`
           : "Not connected.",
       )
       setStep("status")
@@ -120,7 +120,7 @@ export function DialogTelegram() {
             onConfirm={(v) => {
               const adminId = v.trim()
               if (adminId && token()) {
-                connectBot(token(), adminId)
+                void connectBot(token(), adminId)
               }
             }}
             onCancel={() => setStep("menu")}
