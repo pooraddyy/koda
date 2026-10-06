@@ -10,15 +10,17 @@
 
 **Write code, run commands, and ship faster — directly from your terminal.**
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
-```
-
 [Installation](#installation) · [Features](#features) · [Quick Start](#quick-start) · [Documentation](#configuration) · [Contributing](#contributing)
 
 </div>
 
 > **Note:** Koda is built using [OpenCode](https://github.com/sst/opencode) as its foundation. This is a beta version — you may encounter bugs, glitches, or unexpected behavior. Please report issues on the [issues page](https://github.com/pooraddyy/koda/issues).
+
+### Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
+```
 
 ---
 
