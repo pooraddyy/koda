@@ -26,6 +26,22 @@ export interface LLMConfig {
   apiKey: string
 }
 
+export interface ProviderSetup {
+  providerId: string
+  displayName: string
+  baseURL: string
+  apiKey: string
+  modelId: string
+  modelName: string
+}
+
+interface SetupWizardState {
+  step: "providerId" | "baseURL" | "apiKey" | "modelId"
+  providerId: string
+  baseURL: string
+  apiKey: string
+}
+
 /**
  * Telegram integration service.
  * Manages bot connection, command handling, and research task updates.
@@ -37,6 +53,9 @@ export class TelegramService {
   private researchTasks = new Map<string, ResearchTask>()
   private onResearchRequest: ((topic: string, chatId: number, task: ResearchTask) => Promise<void>) | null = null
   private onChatMessage: ((text: string, chatId: number) => Promise<string>) | null = null
+  private _onProviderSetup: ((setup: ProviderSetup) => Promise<void>) | null = null
+  // Setup wizard state per chat
+  private setupWizards = new Map<number, SetupWizardState>()
   // Maps Telegram chatId -> koda sessionID for persistent conversation context
   private chatSessions = new Map<number, string>()
   // Conversation history per chat (for direct LLM calls)
@@ -85,6 +104,10 @@ export class TelegramService {
     this.onChatMessage = fn
   }
 
+  onProviderSetup(fn: (setup: ProviderSetup) => Promise<void>): void {
+    this._onProviderSetup = fn
+  }
+
   private isAdmin(msg: TelegramMessage): boolean {
     return this.config !== null && String(msg.from.id) === this.config.adminId
   }
@@ -99,6 +122,19 @@ export class TelegramService {
     const text = msg.text.trim()
     const chatId = msg.chat.id
 
+    // Setup wizard takes priority
+    const wizard = this.setupWizards.get(chatId)
+    if (wizard) {
+      // Allow /cancel to abort
+      if (text.toLowerCase() === "/cancel") {
+        this.setupWizards.delete(chatId)
+        await this.bot.sendMessage(chatId, "Setup cancelled.")
+        return
+      }
+      await this.handleWizardStep(wizard, text, chatId)
+      return
+    }
+
     if (text.startsWith("/")) {
       await this.handleCommand(text, chatId)
     } else if (this.onChatMessage) {
@@ -112,6 +148,87 @@ export class TelegramService {
     }
   }
 
+  private async handleWizardStep(wizard: SetupWizardState, text: string, chatId: number): Promise<void> {
+    if (!this.bot) return
+    switch (wizard.step) {
+      case "providerId": {
+        const id = text.toLowerCase().replace(/[^a-z0-9-]/g, "-")
+        if (!id) {
+          await this.bot.sendMessage(chatId, "Invalid provider ID. Try again:")
+          return
+        }
+        wizard.providerId = id
+        wizard.step = "baseURL"
+        await this.bot.sendMessage(chatId, "Enter the Base URL (OpenAI-compatible, e.g. https://api.example.com/v1):")
+        break
+      }
+      case "baseURL": {
+        const url = text
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+          await this.bot.sendMessage(chatId, "Invalid URL. Must start with http:// or https://. Try again:")
+          return
+        }
+        wizard.baseURL = url.replace(/\/$/, "")
+        wizard.step = "apiKey"
+        await this.bot.sendMessage(chatId, "Enter the API Key:")
+        break
+      }
+      case "apiKey": {
+        if (!text) {
+          await this.bot.sendMessage(chatId, "API key cannot be empty. Try again:")
+          return
+        }
+        wizard.apiKey = text
+        wizard.step = "modelId"
+        await this.bot.sendMessage(
+          chatId,
+          "Enter the Model ID (as expected by the API, e.g. gpt-4o):",
+        )
+        break
+      }
+      case "modelId": {
+        const modelId = text
+        if (!modelId) {
+          await this.bot.sendMessage(chatId, "Model ID cannot be empty. Try again:")
+          return
+        }
+        this.setupWizards.delete(chatId)
+        if (!this._onProviderSetup) {
+          await this.bot.sendMessage(chatId, "Error: Setup handler not wired.")
+          return
+        }
+        await this.bot.sendMessage(chatId, "Saving provider...")
+        try {
+          await this._onProviderSetup({
+            providerId: wizard.providerId,
+            displayName: wizard.providerId,
+            baseURL: wizard.baseURL,
+            apiKey: wizard.apiKey,
+            modelId,
+            modelName: modelId,
+          })
+          // Update LLM config immediately
+          this.llmConfig = {
+            providerId: wizard.providerId,
+            modelId,
+            baseURL: wizard.baseURL,
+            apiKey: wizard.apiKey,
+          }
+          await this.bot.sendMessage(
+            chatId,
+            `Provider "${wizard.providerId}" connected!\nModel: ${modelId}\n\nYou can now chat with me directly.`,
+          )
+        } catch (err) {
+          await this.bot.sendMessage(
+            chatId,
+            `Setup failed: ${err instanceof Error ? err.message : "unknown error"}`,
+          )
+        }
+        break
+      }
+    }
+  }
+
   private async handleCommand(text: string, chatId: number): Promise<void> {
     if (!this.bot) return
     const [cmd, ...args] = text.split(/\s+/)
@@ -121,14 +238,14 @@ export class TelegramService {
       case "/start":
         await this.bot.sendMessage(
           chatId,
-          `Welcome to Koda Research Bot!\n\nCommands:\n/research <topic> - Start deep research\n/research <topic> | <hours>h - Research with time limit\n/research <topic> | <minutes>m - Research with update interval\n/stop - Stop current research\n/status - Show active tasks\n/connect - Show connection info\n/help - Show this help\n\nYou can also just chat with me directly.`,
+          `Welcome to Koda Research Bot!\n\nCommands:\n/research <topic> - Start deep research\n/research <topic> | <hours>h - Research with time limit\n/research <topic> | <minutes>m - Research with update interval\n/stop - Stop current research\n/status - Show active tasks\n/setup - Connect a provider (model) via Telegram\n/model - Show current model\n/connect - Show connection info\n/help - Show this help\n\nYou can also just chat with me directly.`,
         )
         break
 
       case "/help":
         await this.bot.sendMessage(
           chatId,
-          `Commands:\n/research <topic> - Start deep research on a topic\n  Example: /research artificial intelligence trends\n  With time limit: /research AI trends | 2h\n  With update interval: /research AI trends | 30m\n/stop - Stop all running research tasks\n/status - Show active research tasks\n/connect - Show provider connection info\n/help - Show this help`,
+          `Commands:\n/research <topic> - Start deep research on a topic\n  Example: /research artificial intelligence trends\n  With time limit: /research AI trends | 2h\n  With update interval: /research AI trends | 30m\n/stop - Stop all running research tasks\n/status - Show active research tasks\n/setup - Connect an OpenAI-compatible provider\n/model - Show current model\n/connect - Show provider connection info\n/help - Show this help`,
         )
         break
 
@@ -211,9 +328,33 @@ export class TelegramService {
       case "/connect":
         await this.bot.sendMessage(
           chatId,
-          "To connect a provider, use the /connect command in the Koda TUI.\nCustom OpenAI-compatible providers are supported.",
+          "To connect a provider:\n- Use /setup to configure a provider here in Telegram\n- Or use the /connect command in the Koda TUI\n\nCustom OpenAI-compatible providers are supported.",
         )
         break
+
+      case "/setup": {
+        this.setupWizards.set(chatId, { step: "providerId", providerId: "", baseURL: "", apiKey: "" })
+        await this.bot.sendMessage(
+          chatId,
+          "Provider Setup\n\nEnter a Provider ID (lowercase, e.g. myprovider):\n\nSend /cancel to abort.",
+        )
+        break
+      }
+
+      case "/model": {
+        if (this.llmConfig) {
+          await this.bot.sendMessage(
+            chatId,
+            `Current model: ${this.llmConfig.providerId}/${this.llmConfig.modelId}\nBase URL: ${this.llmConfig.baseURL}\n\nUse /setup to change it.`,
+          )
+        } else {
+          await this.bot.sendMessage(
+            chatId,
+            "No model configured.\nUse /setup to connect a provider.",
+          )
+        }
+        break
+      }
 
       default:
         await this.bot.sendMessage(chatId, `Unknown command: ${cmd}\nUse /help for available commands.`)

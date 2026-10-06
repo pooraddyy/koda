@@ -12,7 +12,7 @@ type TelegramSvc = ReturnType<typeof getTelegramService>
  * Uses direct LLM calls (plain fetch) with the same model/provider as TUI.
  * No Effect context needed in callbacks — config is captured at connect time.
  */
-function wireBotCallbacks(svc: TelegramSvc) {
+function wireBotCallbacks(svc: TelegramSvc, onSetup: (setup: import("@/telegram/service").ProviderSetup) => Promise<void>) {
   // Direct chat: LLM response via direct API call
   svc.onChat(async (text, chatId): Promise<string> => {
     try {
@@ -37,6 +37,11 @@ function wireBotCallbacks(svc: TelegramSvc) {
         .catch(() => {})
     }
   })
+
+  // Provider setup from /setup wizard in Telegram
+  svc.onProviderSetup(async (setup) => {
+    await onSetup(setup)
+  })
 }
 
 /**
@@ -48,17 +53,37 @@ const buildLLMConfig = Effect.fn("TelegramHttpApi.buildLLMConfig")(function* () 
   const authSvc = yield* Auth.Service
   const global = yield* configSvc.getGlobal()
 
-  const modelStr = (global as any).model as string | undefined
-  if (!modelStr) return null
-
-  // model format: "providerId/modelId"
-  const slashIdx = modelStr.indexOf("/")
-  if (slashIdx < 0) return null
-  const providerId = modelStr.slice(0, slashIdx)
-  const modelId = modelStr.slice(slashIdx + 1)
-
   const providers = (global as any).provider as Record<string, any> | undefined
-  const providerCfg = providers?.[providerId]
+  if (!providers) return null
+
+  let providerId: string | undefined
+  let modelId: string | undefined
+
+  // 1. Try the globally selected model first
+  const modelStr = (global as any).model as string | undefined
+  if (modelStr) {
+    const slashIdx = modelStr.indexOf("/")
+    if (slashIdx > 0) {
+      providerId = modelStr.slice(0, slashIdx)
+      modelId = modelStr.slice(slashIdx + 1)
+    }
+  }
+
+  // 2. Auto-detect: use first provider with a model if no model selected
+  if (!providerId || !modelId || !providers[providerId]) {
+    for (const [pid, pcfg] of Object.entries(providers)) {
+      const models = (pcfg as any)?.models as Record<string, any> | undefined
+      const firstModel = models ? Object.keys(models)[0] : undefined
+      if (firstModel && (pcfg as any)?.options?.baseURL) {
+        providerId = pid
+        modelId = firstModel
+        break
+      }
+    }
+  }
+
+  if (!providerId || !modelId) return null
+  const providerCfg = providers[providerId]
   if (!providerCfg) return null
 
   // Get baseURL from provider options
@@ -77,6 +102,32 @@ const buildLLMConfig = Effect.fn("TelegramHttpApi.buildLLMConfig")(function* () 
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
     const configSvc = yield* Config.Service
+    const authSvc = yield* Auth.Service
+
+    /**
+     * Save provider setup from Telegram /setup wizard to global config + auth.
+     * Returns a Promise for use in plain async callbacks.
+     */
+    const saveProviderSetup = (setup: import("@/telegram/service").ProviderSetup): Promise<void> =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          // Save auth key
+          yield* authSvc.set(setup.providerId, { type: "api", key: setup.apiKey } as any)
+          // Save provider config
+          yield* configSvc.updateGlobal({
+            provider: {
+              [setup.providerId]: {
+                name: setup.displayName,
+                npm: "@ai-sdk/openai-compatible",
+                options: { baseURL: setup.baseURL },
+                models: { [setup.modelId]: { name: setup.modelName } },
+              },
+            },
+            // Set as the active model
+            model: `${setup.providerId}/${setup.modelId}`,
+          } as any)
+        }),
+      )
 
     /**
      * Try to auto-reconnect using saved credentials from global config.
@@ -96,7 +147,7 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
           }).pipe(
             Effect.tap(() =>
               Effect.gen(function* () {
-                wireBotCallbacks(svc2)
+                wireBotCallbacks(svc2, saveProviderSetup)
                 // Capture LLM config for bot replies
                 const llmCfg = yield* buildLLMConfig().pipe(Effect.orElseSucceed(() => null))
                 svc2.setLLMConfig(llmCfg)
@@ -120,7 +171,7 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
         Effect.tap(() =>
           Effect.gen(function* () {
             const svc = getTelegramService()
-            wireBotCallbacks(svc)
+            wireBotCallbacks(svc, saveProviderSetup)
             // Capture LLM config for bot replies (same model as TUI)
             const llmCfg = yield* buildLLMConfig().pipe(Effect.orElseSucceed(() => null))
             svc.setLLMConfig(llmCfg)
