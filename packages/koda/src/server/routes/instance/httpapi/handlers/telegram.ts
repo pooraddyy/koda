@@ -2,22 +2,36 @@ import { getTelegramService } from "@/telegram/service"
 import { Config } from "@/config/config"
 import { SessionPrompt } from "@/session/prompt"
 import { SessionShare } from "@/share/session"
+import { InstanceRef, WorkspaceRef } from "@/effect/instance-ref"
+import type { InstanceContext } from "@/project/instance-context"
+import type { WorkspaceV2 } from "@koda-ai/core/workspace"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 
 type TelegramSvc = ReturnType<typeof getTelegramService>
 
+interface BotContext {
+  instanceRef: InstanceContext | undefined
+  workspaceRef: WorkspaceV2.ID | undefined
+}
+
 /**
  * Wire TelegramService callbacks to the agent system.
- * Services are captured from the handler's Effect context.
+ * Captures the handler's context (InstanceRef, WorkspaceRef) so callbacks
+ * can run Effects with all required services (fixes "InstanceRef not provided").
  * Uses the same model/provider config as the TUI (from global config).
  */
-function wireBotCallbacks(
-  svc: TelegramSvc,
-  promptSvc: SessionPrompt.Interface,
-  shareSvc: SessionShare.Interface,
-) {
+function wireBotCallbacks(svc: TelegramSvc, ctx: BotContext) {
+  const withCtx = <A, E>(effect: Effect.Effect<A, E, any>): Effect.Effect<A, E, never> =>
+    effect.pipe(
+      Effect.provideService(InstanceRef, ctx.instanceRef),
+      Effect.provideService(WorkspaceRef, ctx.workspaceRef),
+    ) as Effect.Effect<A, E, never>
+
+  const run = <A, E>(effect: Effect.Effect<A, E, any>): Promise<A> =>
+    Effect.runPromise(withCtx(effect) as Effect.Effect<A, E, never>)
+
   const extractText = (result: unknown): string => {
     const texts: string[] = []
     for (const part of ((result as any)?.parts ?? [])) {
@@ -28,6 +42,7 @@ function wireBotCallbacks(
 
   const getOrCreateSession = (chatId: number) =>
     Effect.gen(function* () {
+      const shareSvc = yield* SessionShare.Service
       let sessionID = svc.getChatSession(chatId)
       if (!sessionID) {
         const session = yield* shareSvc.create({ title: `Telegram chat ${chatId}` })
@@ -40,8 +55,9 @@ function wireBotCallbacks(
   // Direct chat: run the agent and return its response
   svc.onChat(async (text, chatId): Promise<string> => {
     try {
-      const result: string = await Effect.runPromise(
+      const result: string = await run(
         Effect.gen(function* () {
+          const promptSvc = yield* SessionPrompt.Service
           const sessionID = yield* getOrCreateSession(chatId)
           // Prompt the agent (uses the configured model, same as TUI)
           const response = yield* promptSvc.prompt({
@@ -59,8 +75,9 @@ function wireBotCallbacks(
 
   // Research requests from /research command
   svc.onResearch(async (topic, chatId, task) => {
-    await Effect.runPromise(
+    await run(
       Effect.gen(function* () {
+        const promptSvc = yield* SessionPrompt.Service
         const sessionID = yield* getOrCreateSession(chatId)
         const response = yield* promptSvc.prompt({
           sessionID: sessionID as any,
@@ -85,8 +102,10 @@ function wireBotCallbacks(
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
     const configSvc = yield* Config.Service
-    const promptSvc = yield* SessionPrompt.Service
-    const shareSvc = yield* SessionShare.Service
+    // Capture context refs for bot callbacks (plain async functions)
+    const instanceRef = yield* InstanceRef
+    const workspaceRef = yield* WorkspaceRef
+    const botCtx: BotContext = { instanceRef, workspaceRef }
 
     /**
      * Try to auto-reconnect using saved credentials from global config.
@@ -104,7 +123,7 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
             try: () => svc2.connect(tg.token!, tg.adminId!),
             catch: (err) => (err instanceof Error ? err : new Error("auto-reconnect failed")),
           }).pipe(
-            Effect.tap(() => Effect.sync(() => wireBotCallbacks(svc2, promptSvc, shareSvc))),
+            Effect.tap(() => Effect.sync(() => wireBotCallbacks(svc2, botCtx))),
             Effect.ignore, // Don't fail if auto-reconnect fails (e.g. revoked token)
           )
         }
@@ -123,7 +142,7 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
         Effect.tap(() =>
           Effect.gen(function* () {
             const svc = getTelegramService()
-            wireBotCallbacks(svc, promptSvc, shareSvc)
+            wireBotCallbacks(svc, botCtx)
             // Persist credentials to global config for auto-reconnect across restarts
             yield* configSvc.updateGlobal({
               telegram: { token: ctx.payload.token, adminId: ctx.payload.adminId },
