@@ -189,17 +189,6 @@ Type `/help` in Koda for the full command list.
 
 ## Architecture
 
-```
-koda/
-├── packages/
-│   ├── koda/          # Core agent logic, tools, sessions
-│   ├── tui/           # Terminal user interface (SolidJS)
-│   ├── core/          # Shared utilities, tools, effects
-│   └── ...            # Supporting packages
-├── install.sh         # Installation script
-└── README.md
-```
-
 **Key components:**
 - **Agent Engine** (`packages/koda`) — Session management, tool orchestration, LLM integration
 - **TUI** (`packages/tui`) — Reactive terminal interface built with OpenTUI
