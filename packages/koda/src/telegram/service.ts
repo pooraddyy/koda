@@ -34,7 +34,7 @@ export class TelegramService {
     const bot = new TelegramBot(token)
     const me = await bot.getMe()
     if (!me.ok) {
-      throw new Error("Invalid bot token")
+      throw new Error(`Invalid bot token: ${me.description ?? "Telegram rejected the token"}`)
     }
     this.bot = bot
     this.config = { token, adminId }

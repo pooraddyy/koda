@@ -66,9 +66,22 @@ export class TelegramBot {
     return chunks.length > 0 ? chunks : [text.slice(0, maxLen)]
   }
 
-  async getMe(): Promise<{ ok: boolean; result?: { username: string } }> {
-    const res = await fetch(`${this.baseUrl}/getMe`)
-    return (await res.json()) as { ok: boolean; result?: { username: string } }
+  async getMe(): Promise<{ ok: boolean; result?: { username: string }; description?: string }> {
+    let res: Response
+    try {
+      res = await fetch(`${this.baseUrl}/getMe`)
+    } catch (err) {
+      throw new Error(
+        `Could not reach Telegram API: ${err instanceof Error ? err.message : "network error"}. Check your network connection.`,
+      )
+    }
+    let data: { ok: boolean; result?: { username: string }; description?: string }
+    try {
+      data = (await res.json()) as { ok: boolean; result?: { username: string }; description?: string }
+    } catch {
+      throw new Error(`Telegram API returned invalid response (HTTP ${res.status})`)
+    }
+    return data
   }
 
   onText(handler: (msg: TelegramMessage) => Promise<void>): void {
