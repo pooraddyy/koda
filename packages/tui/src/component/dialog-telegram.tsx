@@ -151,6 +151,7 @@ export function DialogTelegram() {
         title="Telegram Bot"
         options={options}
         flat={true}
+        skipFilter={true}
       />
     </Show>
   )
