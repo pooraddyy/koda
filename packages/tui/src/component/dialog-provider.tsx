@@ -433,7 +433,7 @@ function ApiMethod(props: ApiMethodProps) {
                 Koda Zen gives you access to all the best coding models at the cheapest prices with a single API key.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://koda.ai/zen</span> to get a key
+                Go to <span style={{ fg: theme.primary }}>https://github.com/pooraddyy/koda</span> to get a key
               </text>
             </box>
           ),
@@ -444,7 +444,7 @@ function ApiMethod(props: ApiMethodProps) {
                 generous usage limits.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://koda.ai/go</span> and enable Koda Go
+                Go to <span style={{ fg: theme.primary }}>https://github.com/pooraddyy/koda</span> and enable Koda Go
               </text>
             </box>
           ),

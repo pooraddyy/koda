@@ -464,7 +464,7 @@ export const ProvidersLoginCommand = effectCmd({
     }
 
     if (provider === "koda") {
-      yield* Prompt.log.info("Create an api key at https://koda.ai/auth")
+      yield* Prompt.log.info("Create an api key at https://github.com/pooraddyy/koda")
     }
 
     if (provider === "vercel") {
