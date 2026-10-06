@@ -139,9 +139,11 @@ export class TelegramService {
       await this.handleCommand(text, chatId)
     } else if (this.onChatMessage) {
       try {
-        await this.bot.sendMessage(chatId, "Thinking...")
+        // Send "Thinking..." and edit it with the response (cleaner UI)
+        const thinking = await this.bot.sendMessage(chatId, "_Thinking..._")
+        await this.bot.sendChatAction(chatId, "typing")
         const response = await this.onChatMessage(text, chatId)
-        await this.bot.sendMessage(chatId, response)
+        await this.bot.editMessage(chatId, thinking.message_id, response, "Markdown")
       } catch (err) {
         await this.bot.sendMessage(chatId, `Error: ${err instanceof Error ? err.message : "unknown"}`)
       }
@@ -257,40 +259,45 @@ export class TelegramService {
           )
           break
         }
-        // Parse options: "topic | 2h" or "topic | 30m"
+        // Parse topic (ignore | options for now, do full research immediately)
         let topic = arg
-        let maxHours: number | null = null
-        let intervalMin = 30
         const pipeIdx = arg.lastIndexOf("|")
-        if (pipeIdx > 0) {
-          topic = arg.slice(0, pipeIdx).trim()
-          const opt = arg
-            .slice(pipeIdx + 1)
-            .trim()
-            .toLowerCase()
-          const hMatch = opt.match(/^(\d+(?:\.\d+)?)\s*h$/)
-          const mMatch = opt.match(/^(\d+)\s*m$/)
-          if (hMatch) maxHours = parseFloat(hMatch[1])
-          else if (mMatch) intervalMin = parseInt(mMatch[1])
-        }
+        if (pipeIdx > 0) topic = arg.slice(0, pipeIdx).trim()
+
         const task: ResearchTask = {
           id: `research-${Date.now()}`,
           topic,
           chatId,
-          updateIntervalMinutes: intervalMin,
-          maxDurationHours: maxHours,
+          updateIntervalMinutes: 30,
+          maxDurationHours: null,
           startedAt: Date.now(),
           lastUpdateAt: Date.now(),
           status: "running",
         }
         this.researchTasks.set(task.id, task)
-        await this.bot.sendMessage(
-          chatId,
-          `Research started on: "${topic}"\nUpdates every ${intervalMin} min${maxHours ? ` for ${maxHours}h` : " until stopped"}.\nUse /stop to cancel.`,
-        )
-        if (this.onResearchRequest) {
-          this.onResearchRequest(topic, chatId, task).catch((err) =>
-            this.bot?.sendMessage(chatId, `Research error: ${err instanceof Error ? err.message : "unknown"}`),
+
+        // Send progress message and update it as research proceeds
+        const progressMsg = await this.bot.sendMessage(chatId, "_Starting research..._")
+        const onProgress = async (text: string) => {
+          await this.bot!.editMessage(chatId, progressMsg.message_id, text, "Markdown").catch(() => {})
+        }
+
+        try {
+          const report = await this.deepResearch(topic, onProgress)
+          task.status = "completed"
+          // Edit progress message into the final report
+          await this.bot.editMessage(
+            chatId,
+            progressMsg.message_id,
+            `*Research: ${topic}*\n\n${report}`,
+            "Markdown",
+          )
+        } catch (err) {
+          task.status = "stopped"
+          await this.bot.editMessage(
+            chatId,
+            progressMsg.message_id,
+            `Research failed: ${err instanceof Error ? err.message : "unknown error"}`,
           )
         }
         break
@@ -391,22 +398,14 @@ export class TelegramService {
    * Uses plain fetch — no Effect context required.
    * Maintains conversation history per chat.
    */
-  async chatWithLLM(text: string, chatId: number): Promise<string> {
+  /**
+   * Raw LLM call (no history). For multi-step flows like research.
+   */
+  async llmCall(messages: Array<{ role: string; content: string }>, system?: string): Promise<string> {
     if (!this.llmConfig) {
-      throw new Error("LLM not configured. Connect a provider in the TUI first.")
+      throw new Error("LLM not configured. Use /setup to connect a provider.")
     }
     const { baseURL, apiKey, modelId } = this.llmConfig
-
-    // Get or init history
-    let history = this.chatHistory.get(chatId)
-    if (!history) {
-      history = []
-      this.chatHistory.set(chatId, history)
-    }
-    history.push({ role: "user", content: text })
-    // Keep last 20 messages to bound context
-    if (history.length > 20) history.splice(0, history.length - 20)
-
     const url = `${baseURL.replace(/\/$/, "")}/chat/completions`
     const res = await fetch(url, {
       method: "POST",
@@ -417,11 +416,8 @@ export class TelegramService {
       body: JSON.stringify({
         model: modelId,
         messages: [
-          {
-            role: "system",
-            content: "You are Koda, a helpful AI coding assistant. Respond concisely and helpfully.",
-          },
-          ...history,
+          ...(system ? [{ role: "system", content: system }] : []),
+          ...messages,
         ],
       }),
     })
@@ -436,8 +432,93 @@ export class TelegramService {
     if (data.error) throw new Error(`LLM error: ${data.error.message}`)
     const reply = data.choices?.[0]?.message?.content?.trim()
     if (!reply) throw new Error("LLM returned empty response")
-    history.push({ role: "assistant", content: reply })
     return reply
+  }
+
+  async chatWithLLM(text: string, chatId: number): Promise<string> {
+    // Get or init history
+    let history = this.chatHistory.get(chatId)
+    if (!history) {
+      history = []
+      this.chatHistory.set(chatId, history)
+    }
+    history.push({ role: "user", content: text })
+    // Keep last 20 messages to bound context
+    if (history.length > 20) history.splice(0, history.length - 20)
+
+    const reply = await this.llmCall(
+      history,
+      "You are Koda, a helpful AI coding assistant. Respond concisely and helpfully. Use Telegram-compatible markdown (*bold*, _italic_, `code`).",
+    )
+    history.push({ role: "assistant", content: reply })
+    return this.cleanMarkdown(reply)
+  }
+
+  /**
+   * Convert LLM markdown to Telegram-compatible format.
+   * Telegram supports *bold*, _italic_, `code`, [text](url).
+   */
+  cleanMarkdown(text: string): string {
+    return (
+      text
+        // **bold** -> *bold*
+        .replace(/\*\*([^*]+)\*\*/g, "*$1*")
+        // ## headers -> *bold*
+        .replace(/^#{1,6}\s+(.+)$/gm, "*$1*")
+        // Remove excessive blank lines
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    )
+  }
+
+  /**
+   * Multi-step research flow: plan -> gather -> synthesize.
+   * Sends progress updates via the provided callback.
+   */
+  async deepResearch(
+    topic: string,
+    onProgress: (text: string) => Promise<void>,
+  ): Promise<string> {
+    // Step 1: Plan - break into key aspects
+    await onProgress("*Researching:* Planning approach...")
+    const plan = await this.llmCall(
+      [{ role: "user", content: `Break down this research topic into 3-4 key aspects to investigate. List them briefly, one per line:\n\n${topic}` }],
+      "You are a research planner. Be concise.",
+    )
+    const aspects = plan
+      .split("\n")
+      .map((l) => l.replace(/^[-*\d.]+\s*/, "").trim())
+      .filter((l) => l.length > 0)
+      .slice(0, 4)
+
+    // Step 2: Gather - research each aspect
+    const findings: string[] = []
+    for (let i = 0; i < aspects.length; i++) {
+      await onProgress(`*Researching:* Gathering info (${i + 1}/${aspects.length})...\n_${aspects[i].slice(0, 60)}_`)
+      const info = await this.llmCall(
+        [
+          {
+            role: "user",
+            content: `Research this aspect in detail: "${aspects[i]}"\n\nContext topic: ${topic}\n\nProvide key facts, insights, and details.`,
+          },
+        ],
+        "You are a thorough researcher. Provide factual, detailed information.",
+      )
+      findings.push(`*${aspects[i]}*\n${info}`)
+    }
+
+    // Step 3: Synthesize - final report
+    await onProgress("*Researching:* Writing final report...")
+    const report = await this.llmCall(
+      [
+        {
+          role: "user",
+          content: `Synthesize this research into a comprehensive report on "${topic}":\n\n${findings.join("\n\n---\n\n")}\n\nStructure with: *Overview*, key findings per aspect, and a *Recommendation* section.`,
+        },
+      ],
+      "You are a report writer. Create well-structured, insightful reports using *bold* for headers.",
+    )
+    return this.cleanMarkdown(report)
   }
 
   getRunningTasks(): ResearchTask[] {

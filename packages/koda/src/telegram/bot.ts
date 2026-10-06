@@ -28,10 +28,17 @@ export class TelegramBot {
     this.baseUrl = `https://api.telegram.org/bot${token}`
   }
 
-  async sendMessage(chatId: number | string, text: string, parseMode?: "Markdown" | "HTML"): Promise<boolean> {
+  async sendMessage(
+    chatId: number | string,
+    text: string,
+    parseMode?: "Markdown" | "HTML",
+  ): Promise<{ message_id: number }> {
     // Telegram has a 4096 char limit per message — split if needed
+    // For simplicity, only the first chunk returns message_id; rest are follow-ups
     const chunks = this.splitMessage(text)
-    for (const chunk of chunks) {
+    let firstId = 0
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
       const body: Record<string, unknown> = {
         chat_id: chatId,
         text: chunk,
@@ -46,8 +53,43 @@ export class TelegramBot {
         const err = await res.text().catch(() => "unknown")
         throw new Error(`Telegram sendMessage failed: ${res.status} ${err}`)
       }
+      if (i === 0) {
+        const data = (await res.json()) as { result?: { message_id?: number } }
+        firstId = data.result?.message_id ?? 0
+      }
     }
-    return true
+    return { message_id: firstId }
+  }
+
+  async editMessage(
+    chatId: number | string,
+    messageId: number,
+    text: string,
+    parseMode?: "Markdown" | "HTML",
+  ): Promise<void> {
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
+      message_id: messageId,
+      text: text.slice(0, 4000),
+    }
+    if (parseMode) body.parse_mode = parseMode
+    const res = await fetch(`${this.baseUrl}/editMessageText`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      // If edit fails (e.g. message not modified), fall back to sending new
+      await this.sendMessage(chatId, text, parseMode)
+    }
+  }
+
+  async sendChatAction(chatId: number | string, action: string = "typing"): Promise<void> {
+    await fetch(`${this.baseUrl}/sendChatAction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, action }),
+    }).catch(() => {})
   }
 
   private splitMessage(text: string, maxLen = 4000): string[] {

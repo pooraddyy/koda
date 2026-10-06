@@ -13,28 +13,12 @@ type TelegramSvc = ReturnType<typeof getTelegramService>
  * No Effect context needed in callbacks — config is captured at connect time.
  */
 function wireBotCallbacks(svc: TelegramSvc, onSetup: (setup: import("@/telegram/service").ProviderSetup) => Promise<void>) {
-  // Direct chat: LLM response via direct API call
+  // Direct chat: LLM response via direct API call (with Markdown formatting)
   svc.onChat(async (text, chatId): Promise<string> => {
     try {
       return await svc.chatWithLLM(text, chatId)
     } catch (err) {
       return `Error: ${err instanceof Error ? err.message : "unknown error"}`
-    }
-  })
-
-  // Research requests from /research command
-  svc.onResearch(async (topic, chatId, task) => {
-    try {
-      const response = await svc.chatWithLLM(
-        `Deep research request: ${topic}\n\nProvide a comprehensive research report on this topic.`,
-        chatId,
-      )
-      await svc.sendMessage(chatId, `Research complete for "${topic}":\n\n${response}`)
-      svc.updateTaskProgress(task.id)
-    } catch (err) {
-      await svc
-        .sendMessage(chatId, `Research error: ${err instanceof Error ? err.message : "unknown"}`)
-        .catch(() => {})
     }
   })
 
