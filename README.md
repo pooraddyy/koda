@@ -19,7 +19,7 @@
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash
 ```
 
 ---
@@ -59,7 +59,7 @@ Built for developers who live in the terminal, Koda combines agentic code editin
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash
 ```
 
 ### Manual Installation

@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Optional: GitHub token to raise API rate limits (repo is public, not required)
 #   export GITHUB_TOKEN=ghp_xxx
-#   curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash
 AUTH_HEADER=()
 if [ -n "${GITHUB_TOKEN:-}" ]; then
     AUTH_HEADER=(-H "Authorization: Bearer $GITHUB_TOKEN")
@@ -31,8 +31,8 @@ Options:
         --no-modify-path    Don't modify shell config files (.zshrc, .bashrc, etc.)
 
 Examples:
-    curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash
-    curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh | bash -s -- --version 1.0.180
+    curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | bash -s -- --version 1.0.180
     ./install.sh --binary /path/to/koda
 EOF
 }
