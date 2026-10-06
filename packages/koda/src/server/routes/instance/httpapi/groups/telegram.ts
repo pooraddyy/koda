@@ -15,6 +15,7 @@ const TelegramConnectInput = Schema.Struct({
 const TelegramConnectResult = Schema.Struct({
   username: Schema.optional(Schema.String),
   connected: Schema.Boolean,
+  error: Schema.optional(Schema.String),
 }).annotate({ identifier: "TelegramConnectResult" })
 
 const TelegramStatusResult = Schema.Struct({

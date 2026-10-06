@@ -2612,6 +2612,7 @@ export type TelegramConnectInput = {
 export type TelegramConnectResult = {
   username?: string
   connected: boolean
+  error?: string
 }
 
 export type TelegramStatusResult = {

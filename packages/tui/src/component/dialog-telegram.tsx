@@ -31,14 +31,7 @@ function TelegramMenu() {
     },
   ]
 
-  return (
-    <DialogSelect
-      title="Telegram Bot"
-      options={options}
-      flat={true}
-      skipFilter={true}
-    />
-  )
+  return <DialogSelect title="Telegram Bot" options={options} flat={true} skipFilter={true} />
 }
 
 function TelegramTokenInput() {
@@ -77,6 +70,15 @@ function TelegramAdminInput(props: { token: string }) {
         { telegramConnectInput: { token: botToken, adminId } },
         { throwOnError: true },
       )
+      // Check if server returned an error in the response
+      if (result.data.error) {
+        toast.show({
+          message: `Connection failed: ${result.data.error}`,
+          variant: "error",
+        })
+        dialog.replace(() => <TelegramMenu />)
+        return
+      }
       toast.show({
         message: result.data.username ? `Connected to @${result.data.username}` : "Telegram bot connected",
         variant: "success",

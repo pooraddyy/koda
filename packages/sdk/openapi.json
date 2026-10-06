@@ -23410,6 +23410,9 @@
           },
           "connected": {
             "type": "boolean"
+          },
+          "error": {
+            "type": "string"
           }
         },
         "required": ["connected"],

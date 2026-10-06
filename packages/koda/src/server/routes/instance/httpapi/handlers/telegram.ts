@@ -7,8 +7,17 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
   Effect.gen(function* () {
     const connect = Effect.fn("TelegramHttpApi.connect")(function* (ctx) {
       const svc = getTelegramService()
-      const result = yield* Effect.promise(() => svc.connect(ctx.payload.token, ctx.payload.adminId))
-      return { username: result.username, connected: true }
+      try {
+        const result = yield* Effect.promise(() => svc.connect(ctx.payload.token, ctx.payload.adminId))
+        return { username: result.username, connected: true, error: undefined as string | undefined }
+      } catch (err) {
+        // Return error in response instead of throwing, so TUI gets the actual message
+        return {
+          username: undefined as string | undefined,
+          connected: false,
+          error: err instanceof Error ? err.message : "Telegram connection failed",
+        }
+      }
     })
 
     const disconnect = Effect.fn("TelegramHttpApi.disconnect")(function* () {
