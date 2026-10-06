@@ -1,3 +1,10 @@
+/**
+ * Deep research tool.
+ *
+ * Research loop pattern inspired by https://github.com/dzhng/deep-research
+ * (breadth/depth recursion, learnings + follow-up questions, final synthesis).
+ * Adapted to use Koda's built-in websearch/webfetch tools instead of Firecrawl.
+ */
 import * as Tool from "./tool"
 import DESCRIPTION from "./deep-research.txt"
 import { Session } from "@/session/session"
