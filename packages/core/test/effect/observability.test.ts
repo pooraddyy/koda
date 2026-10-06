@@ -40,8 +40,7 @@ describe("resource", () => {
 
   test("keeps built-in attributes when env values conflict", () => {
     process.env.KODA_CLIENT = "cli"
-    process.env.OTEL_RESOURCE_ATTRIBUTES =
-      "koda.client=web,service.instance.id=override,service.namespace=pooraddyy"
+    process.env.OTEL_RESOURCE_ATTRIBUTES = "koda.client=web,service.instance.id=override,service.namespace=pooraddyy"
 
     expect(resource().attributes).toMatchObject({
       "koda.client": "cli",

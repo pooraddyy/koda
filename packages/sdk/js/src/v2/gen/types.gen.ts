@@ -2604,6 +2604,21 @@ export type SessionBusyError = {
   message: string
 }
 
+export type TelegramConnectInput = {
+  token: string
+  adminId: string
+}
+
+export type TelegramConnectResult = {
+  username?: string
+  connected: boolean
+}
+
+export type TelegramStatusResult = {
+  connected: boolean
+  runningTasks: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
 export type EventTuiPromptAppend = {
   type: "tui.prompt.append"
   properties: {
@@ -2774,7 +2789,7 @@ export type SessionHistory = {
   hasMore: boolean
 }
 
-export type SessionDurableEventStream = string
+export type SessionDurableEvent1 = string
 
 export type SessionMessagesResponse = {
   data: Array<SessionMessage>
@@ -2855,7 +2870,7 @@ export type QuestionRejected2 = {
   }
 }
 
-export type V2Event =
+export type V2Event1 =
   | ModelsDevRefreshed
   | IntegrationUpdated
   | IntegrationConnectionUpdated
@@ -2945,7 +2960,7 @@ export type V2Event =
   | ServerConnected
   | GlobalDisposed
 
-export type V2EventStream = string
+export type V2Event = string
 
 export type ForbiddenError = {
   _tag: "ForbiddenError"
@@ -10618,6 +10633,83 @@ export type SyncHistoryListResponses = {
 
 export type SyncHistoryListResponse = SyncHistoryListResponses[keyof SyncHistoryListResponses]
 
+export type TelegramConnectData = {
+  body?: TelegramConnectInput
+  path?: never
+  query?: never
+  url: "/telegram/connect"
+}
+
+export type TelegramConnectErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type TelegramConnectError = TelegramConnectErrors[keyof TelegramConnectErrors]
+
+export type TelegramConnectResponses = {
+  /**
+   * Telegram connected
+   */
+  200: TelegramConnectResult
+}
+
+export type TelegramConnectResponse = TelegramConnectResponses[keyof TelegramConnectResponses]
+
+export type TelegramDisconnectData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/telegram/disconnect"
+}
+
+export type TelegramDisconnectErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type TelegramDisconnectError = TelegramDisconnectErrors[keyof TelegramDisconnectErrors]
+
+export type TelegramDisconnectResponses = {
+  /**
+   * Telegram disconnected
+   */
+  200: {
+    disconnected: boolean
+  }
+}
+
+export type TelegramDisconnectResponse = TelegramDisconnectResponses[keyof TelegramDisconnectResponses]
+
+export type TelegramStatusData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/telegram/status"
+}
+
+export type TelegramStatusErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type TelegramStatusError = TelegramStatusErrors[keyof TelegramStatusErrors]
+
+export type TelegramStatusResponses = {
+  /**
+   * Telegram status
+   */
+  200: TelegramStatusResult
+}
+
+export type TelegramStatusResponse = TelegramStatusResponses[keyof TelegramStatusResponses]
+
 export type TuiAppendPromptData = {
   body?: {
     text: string
@@ -11909,7 +12001,7 @@ export type V2SessionEventsResponses = {
   200: {
     id: string
     event: string
-    data: SessionDurableEventStream
+    data: SessionDurableEvent1
   }
 }
 

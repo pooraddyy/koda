@@ -34,17 +34,17 @@ Built for developers who live in the terminal, Koda combines agentic code editin
 
 ### Core Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| **Agentic Coding** | Autonomous code editing, refactoring, and generation with LSP-powered diagnostics |
-| **100+ LLM Providers** | Native support for Anthropic, OpenAI, Google, and any OpenAI-compatible API |
-| **Custom Providers** | Connect any OpenAI-compatible endpoint via the `/connect` wizard |
-| **Deep Research** | Multi-stage research combining web search, content extraction, and synthesis |
-| **Telegram Integration** | Control Koda remotely via Telegram bot with background task updates |
-| **Background Agents** | Run subagents asynchronously while you continue working |
-| **Session Management** | Persistent, resumable, and shareable coding sessions |
-| **Checkpoints** | Snapshot-based revert for any point in your session |
-| **MCP Support** | Extend capabilities with any Model Context Protocol server |
+| Feature                  | Description                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| **Agentic Coding**       | Autonomous code editing, refactoring, and generation with LSP-powered diagnostics |
+| **100+ LLM Providers**   | Native support for Anthropic, OpenAI, Google, and any OpenAI-compatible API       |
+| **Custom Providers**     | Connect any OpenAI-compatible endpoint via the `/connect` wizard                  |
+| **Deep Research**        | Multi-stage research combining web search, content extraction, and synthesis      |
+| **Telegram Integration** | Control Koda remotely via Telegram bot with background task updates               |
+| **Background Agents**    | Run subagents asynchronously while you continue working                           |
+| **Session Management**   | Persistent, resumable, and shareable coding sessions                              |
+| **Checkpoints**          | Snapshot-based revert for any point in your session                               |
+| **MCP Support**          | Extend capabilities with any Model Context Protocol server                        |
 
 ### Developer Experience
 
@@ -67,6 +67,7 @@ curl -fsSL https://raw.githubusercontent.com/pooraddyy/koda/main/install.sh | ba
 Download the latest release for your platform from the [releases page](https://github.com/pooraddyy/koda/releases).
 
 **Available platforms:**
+
 - Linux x64
 - macOS (ARM64, x64)
 - Windows x64
@@ -83,6 +84,7 @@ bun run build
 ## Quick Start
 
 1. **Launch Koda:**
+
    ```bash
    koda
    ```
@@ -120,6 +122,7 @@ Koda includes a powerful deep research engine for multi-stage investigation:
 ```
 
 **How it works:**
+
 1. Generates diverse search queries covering multiple angles
 2. Searches the web and extracts content from top sources
 3. Identifies key learnings, metrics, and entities
@@ -127,6 +130,7 @@ Koda includes a powerful deep research engine for multi-stage investigation:
 5. Synthesizes everything into a comprehensive report with sources
 
 **Parameters:**
+
 - `breadth` (1-10): Number of angles to explore (default: 3)
 - `depth` (1-3): Follow-up research depth (default: 2)
 
@@ -137,6 +141,7 @@ Control Koda remotely via Telegram:
 1. **Connect:** Use the Telegram setup dialog in TUI (bot token from [@BotFather](https://t.me/BotFather), admin ID from [@userinfobot](https://t.me/userinfobot))
 
 2. **Commands:**
+
    ```
    /research <topic>          Start deep research
    /research <topic> | 2h     Research with 2-hour limit
@@ -177,25 +182,27 @@ Koda uses `koda.json` for configuration:
 ```
 
 **Config locations:**
+
 - Global: `~/.config/koda/koda.json`
 - Project: `./koda.json` (or `.koda/koda.json`)
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+P` | Command palette |
-| `Ctrl+O` | Model selector |
-| `Tab` | Accept suggestion |
-| `Esc` | Cancel / Go back |
-| `/` | Slash commands |
-| `@` | File mentions |
+| Shortcut | Action            |
+| -------- | ----------------- |
+| `Ctrl+P` | Command palette   |
+| `Ctrl+O` | Model selector    |
+| `Tab`    | Accept suggestion |
+| `Esc`    | Cancel / Go back  |
+| `/`      | Slash commands    |
+| `@`      | File mentions     |
 
 Type `/help` in Koda for the full command list.
 
 ## Architecture
 
 **Key components:**
+
 - **Agent Engine** (`packages/koda`) — Session management, tool orchestration, LLM integration
 - **TUI** (`packages/tui`) — Reactive terminal interface built with OpenTUI
 - **Tools** — File editing, bash execution, web search, LSP, deep research, Telegram
@@ -212,6 +219,7 @@ Contributions are welcome! Please follow these guidelines:
 5. Open a Pull Request
 
 **Development setup:**
+
 ```bash
 git clone https://github.com/pooraddyy/koda.git
 cd koda

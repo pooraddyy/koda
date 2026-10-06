@@ -183,11 +183,7 @@ const layer = Layer.effect(
 
     const loadFromDisk = fs.readJson(Flag.KODA_MODELS_PATH ?? filepath).pipe(
       Effect.catch((error) => {
-        if (
-          Flag.KODA_MODELS_PATH === undefined &&
-          error._tag === "FileSystemError" &&
-          error.method === "readJson"
-        ) {
+        if (Flag.KODA_MODELS_PATH === undefined && error._tag === "FileSystemError" && error.method === "readJson") {
           return fs.remove(filepath, { force: true }).pipe(Effect.ignore, Effect.as(undefined))
         }
         return Effect.succeed(undefined)
@@ -195,9 +191,7 @@ const layer = Layer.effect(
       Effect.map((v) => v as Record<string, Provider> | undefined),
     )
 
-    const loadSnapshot = Effect.sync(() =>
-      typeof KODA_MODELS_DEV === "undefined" ? undefined : KODA_MODELS_DEV,
-    )
+    const loadSnapshot = Effect.sync(() => (typeof KODA_MODELS_DEV === "undefined" ? undefined : KODA_MODELS_DEV))
 
     const fetchAndWrite = Effect.fn("ModelsDev.fetchAndWrite")(function* () {
       const text = yield* fetchApi()

@@ -122,7 +122,10 @@ export class TelegramService {
 
       case "/research": {
         if (!arg) {
-          await this.bot.sendMessage(chatId, "Usage: /research <topic>\nExample: /research quantum computing breakthroughs")
+          await this.bot.sendMessage(
+            chatId,
+            "Usage: /research <topic>\nExample: /research quantum computing breakthroughs",
+          )
           break
         }
         // Parse options: "topic | 2h" or "topic | 30m"
@@ -132,7 +135,10 @@ export class TelegramService {
         const pipeIdx = arg.lastIndexOf("|")
         if (pipeIdx > 0) {
           topic = arg.slice(0, pipeIdx).trim()
-          const opt = arg.slice(pipeIdx + 1).trim().toLowerCase()
+          const opt = arg
+            .slice(pipeIdx + 1)
+            .trim()
+            .toLowerCase()
           const hMatch = opt.match(/^(\d+(?:\.\d+)?)\s*h$/)
           const mMatch = opt.match(/^(\d+)\s*m$/)
           if (hMatch) maxHours = parseFloat(hMatch[1])
@@ -169,7 +175,10 @@ export class TelegramService {
             stopped++
           }
         }
-        await this.bot.sendMessage(chatId, stopped > 0 ? `Stopped ${stopped} research task(s).` : "No running research tasks.")
+        await this.bot.sendMessage(
+          chatId,
+          stopped > 0 ? `Stopped ${stopped} research task(s).` : "No running research tasks.",
+        )
         break
       }
 

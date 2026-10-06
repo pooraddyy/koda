@@ -147,9 +147,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
         // Repo is public: install script is fetched from GitHub raw. A token
         // in GITHUB_TOKEN is used when present (helps with API rate limits).
         const githubToken = process.env["GITHUB_TOKEN"]
-        const installRequest = HttpClientRequest.get("https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh").pipe(
-          githubToken ? HttpClientRequest.setHeaders({ Authorization: `Bearer ${githubToken}` }) : (req) => req,
-        )
+        const installRequest = HttpClientRequest.get(
+          "https://raw.githubusercontent.com/pooraddyy/koda/dev/install.sh",
+        ).pipe(githubToken ? HttpClientRequest.setHeaders({ Authorization: `Bearer ${githubToken}` }) : (req) => req)
         const response = yield* httpOk.execute(installRequest)
         const body = yield* response.text
         const bodyBytes = new TextEncoder().encode(body)
@@ -222,9 +222,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
             return info.formulae[0].versions.stable
           }
           const response = yield* httpOk.execute(
-            HttpClientRequest.get("https://formulae.brew.sh/api/formula/koda.json").pipe(
-              HttpClientRequest.acceptJson,
-            ),
+            HttpClientRequest.get("https://formulae.brew.sh/api/formula/koda.json").pipe(HttpClientRequest.acceptJson),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(BrewFormula)(response)
           return data.versions.stable
@@ -232,9 +230,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
 
         if (detectedMethod === "npm" || detectedMethod === "bun" || detectedMethod === "pnpm") {
           const response = yield* httpOk.execute(
-            HttpClientRequest.get(
-              `${yield* NpmConfig.registry(process.cwd())}/koda-ai/${InstallationChannel}`,
-            ).pipe(HttpClientRequest.acceptJson),
+            HttpClientRequest.get(`${yield* NpmConfig.registry(process.cwd())}/koda-ai/${InstallationChannel}`).pipe(
+              HttpClientRequest.acceptJson,
+            ),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(NpmPackage)(response)
           return data.version
@@ -252,9 +250,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
 
         if (detectedMethod === "scoop") {
           const response = yield* httpOk.execute(
-            HttpClientRequest.get(
-              "https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket/koda.json",
-            ).pipe(HttpClientRequest.setHeaders({ Accept: "application/json" })),
+            HttpClientRequest.get("https://raw.githubusercontent.com/ScoopInstaller/Main/master/bucket/koda.json").pipe(
+              HttpClientRequest.setHeaders({ Accept: "application/json" }),
+            ),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(ScoopManifest)(response)
           return data.version

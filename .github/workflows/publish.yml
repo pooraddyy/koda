@@ -380,7 +380,6 @@ jobs:
           git config --global user.name "koda"
           ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts || true
 
-
       - run: ./script/publish.ts
         env:
           KODA_VERSION: ${{ needs.version.outputs.version }}

@@ -37,17 +37,17 @@ already-loaded config until then.
 
 ## Where files live
 
-| Scope                         | Path                                                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Scope                         | Path                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Project config                | `./koda.json`, `./koda.jsonc`, or `.koda/koda.json` (koda walks up from the cwd to the worktree root) |
 | Global config                 | `~/.config/koda/koda.json` or `~/.config/koda/koda.jsonc` (NOT `~/.koda/`)                            |
-| Project agents                | `.koda/agent/<name>.md` or `.koda/agents/<name>.md`                                                               |
-| Global agents                 | `~/.config/koda/agent(s)/<name>.md`                                                                                   |
-| Project commands              | `.koda/command/<name>.md` or `.koda/commands/<name>.md`                                                           |
-| Global commands               | `~/.config/koda/command(s)/<name>.md`                                                                                 |
-| Project skills                | `.koda/skill(s)/<name>/SKILL.md`                                                                                      |
-| Global skills                 | `~/.config/koda/skill(s)/<name>/SKILL.md`                                                                             |
-| External skills (auto-loaded) | `~/.claude/skills/<name>/SKILL.md`, `~/.agents/skills/<name>/SKILL.md`                                                    |
+| Project agents                | `.koda/agent/<name>.md` or `.koda/agents/<name>.md`                                                   |
+| Global agents                 | `~/.config/koda/agent(s)/<name>.md`                                                                   |
+| Project commands              | `.koda/command/<name>.md` or `.koda/commands/<name>.md`                                               |
+| Global commands               | `~/.config/koda/command(s)/<name>.md`                                                                 |
+| Project skills                | `.koda/skill(s)/<name>/SKILL.md`                                                                      |
+| Global skills                 | `~/.config/koda/skill(s)/<name>/SKILL.md`                                                             |
+| External skills (auto-loaded) | `~/.claude/skills/<name>/SKILL.md`, `~/.agents/skills/<name>/SKILL.md`                                |
 
 Configs from each scope are deep-merged. Project overrides global. Unknown
 top-level keys in `koda.json` are rejected with `ConfigInvalidError`.

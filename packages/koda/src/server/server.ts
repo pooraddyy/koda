@@ -49,9 +49,7 @@ interface ListenerServer {
   readonly closeAll: Effect.Effect<void>
 }
 
-class ListenerServerService extends Context.Service<ListenerServerService, ListenerServer>()(
-  "@koda/ListenerServer",
-) {}
+class ListenerServerService extends Context.Service<ListenerServerService, ListenerServer>()("@koda/ListenerServer") {}
 
 export const Default = lazy(() => {
   const handler = HttpApiApp.webHandler().handler

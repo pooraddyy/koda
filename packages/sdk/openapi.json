@@ -8409,6 +8409,141 @@
         ]
       }
     },
+    "/telegram/connect": {
+      "post": {
+        "tags": ["telegram"],
+        "operationId": "telegram.connect",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Telegram connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramConnectResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/effect_HttpApiError_BadRequest"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Connect a Telegram bot with token and admin ID.",
+        "summary": "Connect Telegram bot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelegramConnectInput"
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createKodaClient } from \"@koda-ai/sdk\n\nconst client = createKodaClient()\nawait client.telegram.connect({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/telegram/disconnect": {
+      "post": {
+        "tags": ["telegram"],
+        "operationId": "telegram.disconnect",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Telegram disconnected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "disconnected": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["disconnected"],
+                  "additionalProperties": false,
+                  "description": "Telegram disconnected"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Disconnect the Telegram bot.",
+        "summary": "Disconnect Telegram bot",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createKodaClient } from \"@koda-ai/sdk\n\nconst client = createKodaClient()\nawait client.telegram.disconnect({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/telegram/status": {
+      "get": {
+        "tags": ["telegram"],
+        "operationId": "telegram.status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Telegram status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramStatusResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get Telegram bot connection status.",
+        "summary": "Get Telegram status",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createKodaClient } from \"@koda-ai/sdk\n\nconst client = createKodaClient()\nawait client.telegram.status({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/tui/append-prompt": {
       "post": {
         "tags": ["tui"],
@@ -11261,7 +11396,7 @@
                       "type": "string"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/SessionDurableEventStream"
+                      "$ref": "#/components/schemas/SessionDurableEvent1"
                     }
                   },
                   "required": ["id", "event", "data"],
@@ -23254,6 +23389,65 @@
         "required": ["_tag", "sessionID", "message"],
         "additionalProperties": false
       },
+      "TelegramConnectInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "adminId": {
+            "type": "string"
+          }
+        },
+        "required": ["token", "adminId"],
+        "additionalProperties": false
+      },
+      "TelegramConnectResult": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "connected": {
+            "type": "boolean"
+          }
+        },
+        "required": ["connected"],
+        "additionalProperties": false
+      },
+      "TelegramStatusResult": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "runningTasks": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["NaN"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["-Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          }
+        },
+        "required": ["connected", "runningTasks"],
+        "additionalProperties": false
+      },
       "EventTuiPromptAppend": {
         "type": "object",
         "properties": {
@@ -23767,7 +23961,7 @@
         "required": ["data", "hasMore"],
         "additionalProperties": false
       },
-      "SessionDurableEventStream": {
+      "SessionDurableEvent1": {
         "type": "string",
         "contentSchema": {
           "$ref": "#/components/schemas/SessionDurableEvent"
@@ -24010,7 +24204,7 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
-      "V2Event": {
+      "V2Event1": {
         "anyOf": [
           {
             "$ref": "#/components/schemas/Models-devRefreshed"
@@ -24278,10 +24472,10 @@
           }
         ]
       },
-      "V2EventStream": {
+      "V2Event": {
         "type": "string",
         "contentSchema": {
-          "$ref": "#/components/schemas/V2Event"
+          "$ref": "#/components/schemas/V2Event1"
         },
         "contentMediaType": "application/json"
       },
@@ -36870,6 +37064,9 @@
     {
       "name": "sync",
       "description": "Experimental HttpApi sync routes."
+    },
+    {
+      "name": "telegram"
     },
     {
       "name": "tui",

@@ -17,10 +17,7 @@ describe("koda acp config option subprocess", () => {
     'model option is listed with category "model"',
     ({ home, llm, koda }) =>
       Effect.gen(function* () {
-        const acp = yield* createAcpClient(
-          { koda },
-          { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) },
-        )
+        const acp = yield* createAcpClient({ koda }, { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) })
         yield* initialize(acp)
         const model = expectSelectOption((yield* newSession(acp, home)).configOptions, "model")
 
@@ -35,10 +32,7 @@ describe("koda acp config option subprocess", () => {
     "model switch updates currentValue",
     ({ home, llm, koda }) =>
       Effect.gen(function* () {
-        const acp = yield* createAcpClient(
-          { koda },
-          { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) },
-        )
+        const acp = yield* createAcpClient({ koda }, { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) })
         yield* initialize(acp)
         const session = yield* newSession(acp, home)
         const model = expectSelectOption(session.configOptions, "model")
@@ -62,10 +56,7 @@ describe("koda acp config option subprocess", () => {
     'effort option is listed with category "thought_level" when selected model supports variants',
     ({ home, llm, koda }) =>
       Effect.gen(function* () {
-        const acp = yield* createAcpClient(
-          { koda },
-          { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) },
-        )
+        const acp = yield* createAcpClient({ koda }, { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) })
         yield* initialize(acp)
         const effort = expectSelectOption((yield* newSession(acp, home)).configOptions, "effort")
 
@@ -80,10 +71,7 @@ describe("koda acp config option subprocess", () => {
     "effort switch updates currentValue",
     ({ home, llm, koda }) =>
       Effect.gen(function* () {
-        const acp = yield* createAcpClient(
-          { koda },
-          { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) },
-        )
+        const acp = yield* createAcpClient({ koda }, { KODA_CONFIG_CONTENT: JSON.stringify(verifierConfig(llm.url)) })
         yield* initialize(acp)
         const session = yield* newSession(acp, home)
         const nextEffort = expectAlternateValue(expectSelectOption(session.configOptions, "effort"))

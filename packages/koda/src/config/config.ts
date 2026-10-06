@@ -138,9 +138,7 @@ export class Service extends Context.Service<Service, Interface>()("@koda/Config
 export const use = serviceUse(Service)
 
 function globalConfigFile() {
-  const candidates = ["koda.jsonc", "koda.json", "config.json"].map((file) =>
-    path.join(Global.Path.config, file),
-  )
+  const candidates = ["koda.jsonc", "koda.json", "config.json"].map((file) => path.join(Global.Path.config, file))
   for (const file of candidates) {
     if (existsSync(file)) return file
   }

@@ -49,6 +49,7 @@ We welcome the following types of contributions:
 ## Making Changes
 
 1. Create a feature branch:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -56,6 +57,7 @@ We welcome the following types of contributions:
 2. Make your changes following the style guide in [AGENTS.md](./AGENTS.md)
 
 3. Test your changes:
+
    ```bash
    # Typecheck
    bun typecheck
@@ -68,6 +70,7 @@ We welcome the following types of contributions:
    ```
 
 4. Commit with a descriptive message:
+
    ```bash
    git commit -m "feat: add your feature description"
    ```
@@ -136,6 +139,7 @@ Use the appropriate issue template:
 - **Question** — Ask about usage or behavior
 
 Include:
+
 - Koda version (`koda --version`)
 - Operating system and version
 - Relevant configuration (redact API keys)

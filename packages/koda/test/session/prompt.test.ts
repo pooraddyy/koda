@@ -309,10 +309,7 @@ const writeText = Effect.fn("test.writeText")(function* (file: string, text: str
 })
 
 const writeConfig = Effect.fn("test.writeConfig")(function* (dir: string, config: Partial<ConfigV1.Info>) {
-  yield* writeText(
-    path.join(dir, "koda.json"),
-    JSON.stringify({ $schema: "https://koda.ai/config.json", ...config }),
-  )
+  yield* writeText(path.join(dir, "koda.json"), JSON.stringify({ $schema: "https://koda.ai/config.json", ...config }))
 })
 
 const useServerConfig = Effect.fn("test.useServerConfig")(function* (config: (url: string) => Partial<ConfigV1.Info>) {

@@ -21,9 +21,7 @@ describe("koda mcp add (non-interactive subprocess)", () => {
         ])
         koda.expectExit(result, 0)
 
-        const config = yield* Effect.promise(() =>
-          Bun.file(path.join(home, ".config", "koda", "koda.json")).json(),
-        )
+        const config = yield* Effect.promise(() => Bun.file(path.join(home, ".config", "koda", "koda.json")).json())
         expect(config.mcp.github).toEqual({
           type: "remote",
           url: "https://example.com/mcp",
@@ -57,9 +55,7 @@ describe("koda mcp add (non-interactive subprocess)", () => {
         ])
         koda.expectExit(result, 0)
 
-        const config = yield* Effect.promise(() =>
-          Bun.file(path.join(home, ".config", "koda", "koda.json")).json(),
-        )
+        const config = yield* Effect.promise(() => Bun.file(path.join(home, ".config", "koda", "koda.json")).json())
         expect(config.mcp.local).toEqual({
           type: "local",
           command: ["npx", "-y", "@example/server", "--label", "two words"],

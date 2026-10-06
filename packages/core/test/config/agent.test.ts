@@ -23,9 +23,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("matches POSIX paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("/home/test")
-      expect(PermissionV2.evaluate("external_directory", "/home/test/p/koda/src/*", permissions).effect).toBe(
-        "allow",
-      )
+      expect(PermissionV2.evaluate("external_directory", "/home/test/p/koda/src/*", permissions).effect).toBe("allow")
       expect(PermissionV2.evaluate("external_directory", "/home/test/cache/files/*", permissions).effect).toBe("deny")
       expect(PermissionV2.evaluate("external_directory", "/some/~/path", permissions).effect).toBe("deny")
       expect(PermissionV2.evaluate("external_directory", "$HOMELESS/private/*", permissions).effect).toBe("deny")
@@ -36,9 +34,9 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("matches Windows paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("C:\\Users\\test")
-      expect(
-        PermissionV2.evaluate("external_directory", "C:\\Users\\test\\p\\koda\\src\\*", permissions).effect,
-      ).toBe("allow")
+      expect(PermissionV2.evaluate("external_directory", "C:\\Users\\test\\p\\koda\\src\\*", permissions).effect).toBe(
+        "allow",
+      )
       expect(PermissionV2.evaluate("external_directory", "C:\\Users\\test\\cache\\files\\*", permissions).effect).toBe(
         "deny",
       )

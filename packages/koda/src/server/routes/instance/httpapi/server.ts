@@ -97,6 +97,7 @@ import { ptyConnectHandlers, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
 import { sessionHandlers } from "./handlers/session"
 import { syncHandlers } from "./handlers/sync"
+import { telegramHandlers } from "./handlers/telegram"
 import { tuiHandlers } from "./handlers/tui"
 import { handlers } from "@koda-ai/server/handlers"
 import { buildLocationServiceMap, LocationServiceMap } from "@koda-ai/core/location-services"
@@ -164,6 +165,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     providerHandlers,
     sessionHandlers,
     syncHandlers,
+    telegramHandlers,
     tuiHandlers,
     workspaceHandlers,
   ]),

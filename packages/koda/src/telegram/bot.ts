@@ -109,9 +109,7 @@ export class TelegramBot {
           for (const update of data.result) {
             this.offset = Math.max(this.offset, update.update_id + 1)
             if (update.message?.text && this.onMessage) {
-              await this.onMessage(update.message).catch((err) =>
-                console.error("Message handler error:", err),
-              )
+              await this.onMessage(update.message).catch((err) => console.error("Message handler error:", err))
             }
           }
         }

@@ -34,9 +34,7 @@ export const Flag = {
   KODA_DISABLE_FFF: fff === undefined ? process.platform === "win32" : truthy("KODA_DISABLE_FFF"),
 
   // Experimental
-  KODA_EXPERIMENTAL_FILEWATCHER: Config.boolean("KODA_EXPERIMENTAL_FILEWATCHER").pipe(
-    Config.withDefault(false),
-  ),
+  KODA_EXPERIMENTAL_FILEWATCHER: Config.boolean("KODA_EXPERIMENTAL_FILEWATCHER").pipe(Config.withDefault(false)),
   KODA_EXPERIMENTAL_DISABLE_FILEWATCHER: Config.boolean("KODA_EXPERIMENTAL_DISABLE_FILEWATCHER").pipe(
     Config.withDefault(false),
   ),

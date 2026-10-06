@@ -232,6 +232,13 @@ import type {
   SyncStartResponses,
   SyncStealErrors,
   SyncStealResponses,
+  TelegramConnectErrors,
+  TelegramConnectInput,
+  TelegramConnectResponses,
+  TelegramDisconnectErrors,
+  TelegramDisconnectResponses,
+  TelegramStatusErrors,
+  TelegramStatusResponses,
   TextPartInput,
   ToolIdsErrors,
   ToolIdsResponses,
@@ -4574,6 +4581,56 @@ export class Sync extends HeyApiClient {
   }
 }
 
+export class Telegram extends HeyApiClient {
+  /**
+   * Connect Telegram bot
+   *
+   * Connect a Telegram bot with token and admin ID.
+   */
+  public connect<ThrowOnError extends boolean = false>(
+    parameters?: {
+      telegramConnectInput?: TelegramConnectInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ key: "telegramConnectInput", map: "body" }] }])
+    return (options?.client ?? this.client).post<TelegramConnectResponses, TelegramConnectErrors, ThrowOnError>({
+      url: "/telegram/connect",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Disconnect Telegram bot
+   *
+   * Disconnect the Telegram bot.
+   */
+  public disconnect<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).post<TelegramDisconnectResponses, TelegramDisconnectErrors, ThrowOnError>({
+      url: "/telegram/disconnect",
+      ...options,
+    })
+  }
+
+  /**
+   * Get Telegram status
+   *
+   * Get Telegram bot connection status.
+   */
+  public status<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<TelegramStatusResponses, TelegramStatusErrors, ThrowOnError>({
+      url: "/telegram/status",
+      ...options,
+    })
+  }
+}
+
 export class Control extends HeyApiClient {
   /**
    * Get next TUI request
@@ -7205,6 +7262,11 @@ export class KodaClient extends HeyApiClient {
   private _sync?: Sync
   get sync(): Sync {
     return (this._sync ??= new Sync({ client: this.client }))
+  }
+
+  private _telegram?: Telegram
+  get telegram(): Telegram {
+    return (this._telegram ??= new Telegram({ client: this.client }))
   }
 
   private _tui?: Tui
