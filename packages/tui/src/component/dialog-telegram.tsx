@@ -1,20 +1,77 @@
-import { createSignal, Show } from "solid-js"
 import { useDialog } from "../ui/dialog"
 import { useToast } from "../ui/toast"
 import { DialogSelect } from "../ui/dialog-select"
 import { DialogPrompt } from "../ui/dialog-prompt"
 import { useSDK } from "../context/sdk"
 
-export function DialogTelegram() {
+function TelegramMenu() {
+  const dialog = useDialog()
+
+  const options = [
+    {
+      key: "connect",
+      value: "connect",
+      title: "Connect Bot",
+      description: "Enter bot token and admin ID to connect",
+      onSelect: () => dialog.replace(() => <TelegramTokenInput />),
+    },
+    {
+      key: "disconnect",
+      value: "disconnect",
+      title: "Disconnect",
+      description: "Disconnect the Telegram bot",
+      onSelect: () => dialog.replace(() => <TelegramDisconnect />),
+    },
+    {
+      key: "status",
+      value: "status",
+      title: "Status",
+      description: "Check Telegram connection status",
+      onSelect: () => dialog.replace(() => <TelegramStatus />),
+    },
+  ]
+
+  return (
+    <DialogSelect
+      title="Telegram Bot"
+      options={options}
+      flat={true}
+      skipFilter={true}
+    />
+  )
+}
+
+function TelegramTokenInput() {
+  const dialog = useDialog()
+
+  return (
+    <DialogPrompt
+      title="Connect Telegram Bot"
+      description={() => (
+        <box flexDirection="column">
+          <text>Enter your Telegram bot token.</text>
+          <text>Get one from @BotFather on Telegram.</text>
+        </box>
+      )}
+      placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+      onConfirm={(v) => {
+        const t = v.trim()
+        if (t) {
+          dialog.replace(() => <TelegramAdminInput token={t} />)
+        }
+      }}
+      onCancel={() => dialog.replace(() => <TelegramMenu />)}
+    />
+  )
+}
+
+function TelegramAdminInput(props: { token: string }) {
   const dialog = useDialog()
   const toast = useToast()
   const sdk = useSDK()
-  const [step, setStep] = createSignal<"menu" | "token" | "adminId" | "working" | "status">("menu")
-  const [token, setToken] = createSignal("")
-  const [statusInfo, setStatusInfo] = createSignal("")
 
   const connectBot = async (botToken: string, adminId: string) => {
-    setStep("working")
+    dialog.replace(() => <TelegramWorking />)
     try {
       const result = await sdk.client.telegram.connect(
         { telegramConnectInput: { token: botToken, adminId } },
@@ -30,12 +87,81 @@ export function DialogTelegram() {
         message: `Connection failed: ${err instanceof Error ? err.message : "unknown error"}`,
         variant: "error",
       })
-      setStep("menu")
+      dialog.replace(() => <TelegramMenu />)
     }
   }
 
-  const disconnectBot = async () => {
-    setStep("working")
+  return (
+    <DialogPrompt
+      title="Telegram Admin ID"
+      description={() => (
+        <box flexDirection="column">
+          <text>Enter your Telegram user ID (numbers only).</text>
+          <text>Get it from @userinfobot on Telegram.</text>
+        </box>
+      )}
+      placeholder="123456789"
+      onConfirm={(v) => {
+        const adminId = v.trim()
+        if (adminId) {
+          void connectBot(props.token, adminId)
+        }
+      }}
+      onCancel={() => dialog.replace(() => <TelegramMenu />)}
+    />
+  )
+}
+
+function TelegramWorking() {
+  return (
+    <box flexDirection="column" gap={1} padding={1}>
+      <text>Working...</text>
+    </box>
+  )
+}
+
+function TelegramStatus() {
+  const dialog = useDialog()
+  const toast = useToast()
+  const sdk = useSDK()
+
+  // Fetch status on mount
+  void (async () => {
+    try {
+      const result = await sdk.client.telegram.status({ throwOnError: true })
+      const text = result.data.connected
+        ? `Connected. ${result.data.runningTasks} active research task(s).`
+        : "Not connected."
+      // Re-render with status
+      dialog.replace(() => <TelegramStatusView text={text} />)
+    } catch (err) {
+      toast.show({
+        message: `Failed: ${err instanceof Error ? err.message : "unknown"}`,
+        variant: "error",
+      })
+      dialog.replace(() => <TelegramMenu />)
+    }
+  })()
+
+  return <TelegramWorking />
+}
+
+function TelegramStatusView(props: { text: string }) {
+  return (
+    <box flexDirection="column" gap={1} padding={1}>
+      <text>Telegram Status</text>
+      <text>{props.text}</text>
+      <text>Press ESC to close</text>
+    </box>
+  )
+}
+
+function TelegramDisconnect() {
+  const dialog = useDialog()
+  const toast = useToast()
+  const sdk = useSDK()
+
+  void (async () => {
     try {
       await sdk.client.telegram.disconnect({ throwOnError: true })
       toast.show({ message: "Telegram bot disconnected", variant: "success" })
@@ -45,114 +171,13 @@ export function DialogTelegram() {
         message: `Failed: ${err instanceof Error ? err.message : "unknown"}`,
         variant: "error",
       })
-      setStep("menu")
+      dialog.replace(() => <TelegramMenu />)
     }
-  }
+  })()
 
-  const checkStatus = async () => {
-    setStep("working")
-    try {
-      const result = await sdk.client.telegram.status({ throwOnError: true })
-      setStatusInfo(
-        result.data.connected
-          ? `Connected. ${result.data.runningTasks} active research task(s).`
-          : "Not connected.",
-      )
-      setStep("status")
-    } catch (err) {
-      toast.show({
-        message: `Failed: ${err instanceof Error ? err.message : "unknown"}`,
-        variant: "error",
-      })
-      setStep("menu")
-    }
-  }
+  return <TelegramWorking />
+}
 
-  // Options as plain array (not memo) for stable references
-  const options = [
-    {
-      key: "connect",
-      value: "connect",
-      title: "Connect Bot",
-      description: "Enter bot token and admin ID to connect",
-      onSelect: () => setStep("token"),
-    },
-    {
-      key: "disconnect",
-      value: "disconnect",
-      title: "Disconnect",
-      description: "Disconnect the Telegram bot",
-      onSelect: () => disconnectBot(),
-    },
-    {
-      key: "status",
-      value: "status",
-      title: "Status",
-      description: "Check Telegram connection status",
-      onSelect: () => checkStatus(),
-    },
-  ]
-
-  return (
-    <Show when={step() === "menu"} fallback={
-      <Show when={step() === "token"} fallback={
-        <Show when={step() === "adminId"} fallback={
-          <Show when={step() === "status"} fallback={
-            <box flexDirection="column" gap={1} padding={1}>
-              <text>Working...</text>
-            </box>
-          }>
-            <box flexDirection="column" gap={1} padding={1}>
-              <text>Telegram Status</text>
-              <text>{statusInfo()}</text>
-            </box>
-          </Show>
-        }>
-          <DialogPrompt
-            title="Telegram Admin ID"
-            description={() => (
-              <box flexDirection="column">
-                <text>Enter your Telegram user ID (numbers only).</text>
-                <text>Get it from @userinfobot on Telegram.</text>
-              </box>
-            )}
-            placeholder="123456789"
-            onConfirm={(v) => {
-              const adminId = v.trim()
-              if (adminId && token()) {
-                void connectBot(token(), adminId)
-              }
-            }}
-            onCancel={() => setStep("menu")}
-          />
-        </Show>
-      }>
-        <DialogPrompt
-          title="Connect Telegram Bot"
-          description={() => (
-            <box flexDirection="column">
-              <text>Enter your Telegram bot token.</text>
-              <text>Get one from @BotFather on Telegram.</text>
-            </box>
-          )}
-          placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
-          onConfirm={(v) => {
-            const t = v.trim()
-            if (t) {
-              setToken(t)
-              setStep("adminId")
-            }
-          }}
-          onCancel={() => setStep("menu")}
-        />
-      </Show>
-    }>
-      <DialogSelect
-        title="Telegram Bot"
-        options={options}
-        flat={true}
-        skipFilter={true}
-      />
-    </Show>
-  )
+export function DialogTelegram() {
+  return <TelegramMenu />
 }
