@@ -187,6 +187,14 @@ export const Info = Schema.Struct({
       }),
     }),
   ),
+  telegram: Schema.optional(
+    Schema.Struct({
+      token: Schema.String,
+      adminId: Schema.String,
+    }),
+  ).annotate({
+    description: "Telegram bot configuration. Token from @BotFather, adminId from @userinfobot.",
+  }),
 }).annotate({ identifier: "Config" })
 
 export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>

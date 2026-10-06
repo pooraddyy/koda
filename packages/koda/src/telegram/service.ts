@@ -29,6 +29,8 @@ export class TelegramService {
   private researchTasks = new Map<string, ResearchTask>()
   private onResearchRequest: ((topic: string, chatId: number, task: ResearchTask) => Promise<void>) | null = null
   private onChatMessage: ((text: string, chatId: number) => Promise<string>) | null = null
+  // Maps Telegram chatId -> koda sessionID for persistent conversation context
+  private chatSessions = new Map<number, string>()
 
   async connect(token: string, adminId: string): Promise<{ username?: string }> {
     const bot = new TelegramBot(token)
@@ -210,6 +212,18 @@ export class TelegramService {
 
   getTask(id: string): ResearchTask | undefined {
     return this.researchTasks.get(id)
+  }
+
+  getChatSession(chatId: number): string | undefined {
+    return this.chatSessions.get(chatId)
+  }
+
+  setChatSession(chatId: number, sessionID: string): void {
+    this.chatSessions.set(chatId, sessionID)
+  }
+
+  clearChatSessions(): void {
+    this.chatSessions.clear()
   }
 
   getRunningTasks(): ResearchTask[] {
