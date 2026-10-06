@@ -1,13 +1,15 @@
 import { getTelegramService } from "@/telegram/service"
 import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 
 export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram", (handlers) =>
   Effect.gen(function* () {
     const connect = Effect.fn("TelegramHttpApi.connect")(function* (ctx) {
       const svc = getTelegramService()
-      const result = yield* Effect.promise(() => svc.connect(ctx.payload.token, ctx.payload.adminId))
+      const result = yield* Effect.promise(() => svc.connect(ctx.payload.token, ctx.payload.adminId)).pipe(
+        Effect.catch(() => Effect.fail(new HttpApiError.BadRequest({}))),
+      )
       return { username: result.username, connected: true }
     })
 

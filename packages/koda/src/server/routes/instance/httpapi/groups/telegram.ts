@@ -1,8 +1,6 @@
-import { getTelegramService } from "@/telegram/service"
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { Authorization } from "../middleware/authorization"
-import { InstanceContextMiddleware } from "../middleware/instance-context"
 import { described } from "./metadata"
 
 const root = "/telegram"
@@ -59,6 +57,7 @@ export const TelegramApi = HttpApi.make("telegram").add(
         }),
       ),
     )
-    .middleware(Authorization)
-    .middleware(InstanceContextMiddleware),
+    // Telegram is a process-wide integration, not a project instance service.
+    // Status/connect must work even when the current directory is not an initialized project.
+    .middleware(Authorization),
 )
