@@ -47,7 +47,6 @@ export const Default = {
   INIT: "init",
   REVIEW: "review",
   RESEARCH: "research",
-  TELEGRAM: "telegram",
 } as const
 
 export interface Interface {
@@ -94,16 +93,6 @@ const layer = Layer.effect(
         source: "command",
         get template() {
           return "Use the deep_research tool to conduct thorough research on the following topic. Ask me for the topic if not provided, or use the arguments given.\n\nTopic: $ARGUMENTS"
-        },
-        subtask: true,
-        hints: [],
-      }
-      commands[Default.TELEGRAM] = {
-        name: Default.TELEGRAM,
-        description: "connect and manage Telegram bot integration",
-        source: "command",
-        get template() {
-          return "Use the telegram tool to help with Telegram bot integration. If the user wants to connect, ask for the bot token (from @BotFather) and admin ID (from @userinfobot). Available actions: connect, disconnect, send, status.\n\nRequest: $ARGUMENTS"
         },
         subtask: true,
         hints: [],
