@@ -1,4 +1,4 @@
-import { createMemo, createSignal, Show } from "solid-js"
+import { createSignal, Show } from "solid-js"
 import { useDialog } from "../ui/dialog"
 import { useToast } from "../ui/toast"
 import { DialogSelect } from "../ui/dialog-select"
@@ -68,8 +68,8 @@ export function DialogTelegram() {
     }
   }
 
-  // Follow DialogModel pattern: options via createMemo with option-level onSelect
-  const options = createMemo(() => [
+  // Options as plain array (not memo) for stable references
+  const options = [
     {
       key: "connect",
       value: "connect",
@@ -91,7 +91,7 @@ export function DialogTelegram() {
       description: "Check Telegram connection status",
       onSelect: () => checkStatus(),
     },
-  ])
+  ]
 
   return (
     <Show when={step() === "menu"} fallback={
@@ -149,7 +149,8 @@ export function DialogTelegram() {
     }>
       <DialogSelect
         title="Telegram Bot"
-        options={options()}
+        options={options}
+        flat={true}
       />
     </Show>
   )
