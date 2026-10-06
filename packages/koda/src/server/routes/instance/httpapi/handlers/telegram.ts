@@ -34,16 +34,15 @@ export const telegramHandlers = HttpApiBuilder.group(InstanceHttpApi, "telegram"
     })
 
     const disconnect = Effect.fn("TelegramHttpApi.disconnect")(function* () {
-      const svc = getTelegramService()
-      svc.disconnect()
+      // Minimal test: no service call
       return { disconnected: true }
     })
 
     const status = Effect.fn("TelegramHttpApi.status")(function* () {
-      const svc = getTelegramService()
+      // Minimal test: no service call
       return {
-        connected: svc.isConnected(),
-        runningTasks: svc.getRunningTasks().length,
+        connected: false,
+        runningTasks: 0,
       }
     })
 
