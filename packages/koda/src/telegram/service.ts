@@ -42,6 +42,23 @@ interface SetupWizardState {
   apiKey: string
 }
 
+/** Conversation state for the inline UX flow */
+type ChatFlow =
+  | { kind: "idle" }
+  | { kind: "awaiting_topic" }
+  | { kind: "awaiting_duration"; topic: string }
+
+interface ContinuousResearch {
+  topic: string
+  chatId: number
+  startedAt: number
+  endsAt: number | null // null = until stopped
+  intervalMs: number
+  timer: ReturnType<typeof setTimeout> | null
+  previousFindings: string[]
+  updateCount: number
+}
+
 /**
  * Telegram integration service.
  * Manages bot connection, command handling, and research task updates.
@@ -56,6 +73,10 @@ export class TelegramService {
   private _onProviderSetup: ((setup: ProviderSetup) => Promise<void>) | null = null
   // Setup wizard state per chat
   private setupWizards = new Map<number, SetupWizardState>()
+  // Inline UX conversation flow per chat
+  private chatFlows = new Map<number, ChatFlow>()
+  // Active continuous research tasks
+  private continuousResearch = new Map<string, ContinuousResearch>()
   // Maps Telegram chatId -> koda sessionID for persistent conversation context
   private chatSessions = new Map<number, string>()
   // Conversation history per chat (for direct LLM calls)
@@ -70,6 +91,7 @@ export class TelegramService {
     this.bot = bot
     this.config = { token, adminId }
     bot.onText((msg) => this.handleMessage(msg))
+    bot.onCallbackQuery((query) => this.handleCallback(query))
     bot.startPolling()
     return { username: me.result?.username }
   }
@@ -135,6 +157,14 @@ export class TelegramService {
       return
     }
 
+    // Inline UX flow takes priority (after setup wizard)
+    const flow = this.chatFlows.get(chatId)
+    if (flow && flow.kind === "awaiting_topic" && !text.startsWith("/")) {
+      this.chatFlows.set(chatId, { kind: "awaiting_duration", topic: text })
+      await this.askResearchDuration(chatId)
+      return
+    }
+
     if (text.startsWith("/")) {
       await this.handleCommand(text, chatId)
     } else if (this.onChatMessage) {
@@ -148,6 +178,167 @@ export class TelegramService {
         await this.bot.sendMessage(chatId, `Error: ${err instanceof Error ? err.message : "unknown"}`)
       }
     }
+  }
+
+  /**
+   * Handle inline keyboard button taps (callback queries).
+   */
+  private async handleCallback(query: import("./bot").TelegramCallbackQuery): Promise<void> {
+    if (!this.bot) return
+    const chatId = query.message?.chat.id
+    if (!chatId || !this.isAdminMsg(query.from.id)) return
+
+    await this.bot.answerCallbackQuery(query.id)
+    const data = query.data ?? ""
+    const msgId = query.message?.message_id
+
+    if (data === "action_research") {
+      this.chatFlows.set(chatId, { kind: "awaiting_topic" })
+      await this.bot.editMessage(
+        chatId,
+        msgId!,
+        "*Deep Research*\n\nSend me the topic you want to research:",
+        "Markdown",
+        { inline_keyboard: [[{ text: "Cancel", callback_data: "action_cancel" }]] },
+      )
+    } else if (data === "action_chat") {
+      this.chatFlows.set(chatId, { kind: "idle" })
+      await this.bot.editMessage(
+        chatId,
+        msgId!,
+        "*Chat Mode*\n\nJust send me any message and I'll respond.",
+        "Markdown",
+        { inline_keyboard: [[{ text: "Back to Menu", callback_data: "action_menu" }]] },
+      )
+    } else if (data === "action_setup") {
+      this.chatFlows.set(chatId, { kind: "idle" })
+      this.setupWizards.set(chatId, { step: "providerId", providerId: "", baseURL: "", apiKey: "" })
+      await this.bot.editMessage(
+        chatId,
+        msgId!,
+        "*Provider Setup*\n\nEnter a Provider ID (lowercase, e.g. myprovider):\n\nSend /cancel to abort.",
+        "Markdown",
+      )
+    } else if (data === "action_status") {
+      const running = [...this.continuousResearch.values()].filter((r) => r.chatId === chatId)
+      const llm = this.llmConfig ? `${this.llmConfig.providerId}/${this.llmConfig.modelId}` : "Not configured"
+      const text =
+        `*Status*\n\n` +
+        `Model: ${llm}\n` +
+        `Active research: ${running.length}\n` +
+        (running.length > 0 ? running.map((r) => `- ${r.topic.slice(0, 40)}`).join("\n") : "")
+      await this.bot.editMessage(chatId, msgId!, text, "Markdown", {
+        inline_keyboard: [[{ text: "Back to Menu", callback_data: "action_menu" }]],
+      })
+    } else if (data === "action_menu") {
+      this.chatFlows.set(chatId, { kind: "idle" })
+      await this.sendMainMenu(chatId, msgId)
+    } else if (data === "action_cancel") {
+      this.chatFlows.set(chatId, { kind: "idle" })
+      await this.sendMainMenu(chatId, msgId)
+    } else if (data.startsWith("duration_")) {
+      const flow = this.chatFlows.get(chatId)
+      if (!flow || flow.kind !== "awaiting_duration") return
+      const topic = flow.topic
+      this.chatFlows.set(chatId, { kind: "idle" })
+
+      // Parse duration: duration_15m, duration_1h, duration_6h, duration_skip
+      const val = data.slice("duration_".length)
+
+      if (val === "skip") {
+        // One-time deep research report (3-step: plan -> gather -> synthesize)
+        const progressMsg = await this.bot.sendMessage(chatId, "_Starting research..._")
+        await this.bot.editMessage(chatId, msgId!, `*Research:* ${topic}\n\nGenerating one-time report...`, "Markdown")
+        const onProgress = async (text: string) => {
+          await this.bot!.editMessage(chatId, progressMsg.message_id, text, "Markdown").catch(() => {})
+        }
+        try {
+          const report = await this.deepResearch(topic, onProgress)
+          await this.bot.editMessage(
+            chatId,
+            progressMsg.message_id,
+            `*Research: ${topic}*\n\n${report}`,
+            "Markdown",
+          )
+        } catch (err) {
+          await this.bot.editMessage(
+            chatId,
+            progressMsg.message_id,
+            `Research failed: ${err instanceof Error ? err.message : "unknown error"}`,
+          )
+        }
+        return
+      }
+
+      let durationMs: number | null = null
+      let label = "continuous"
+      if (val === "15m") { durationMs = 15 * 60 * 1000; label = "15 minutes" }
+      else if (val === "1h") { durationMs = 60 * 60 * 1000; label = "1 hour" }
+      else if (val === "6h") { durationMs = 6 * 60 * 60 * 1000; label = "6 hours" }
+
+      await this.bot.editMessage(
+        chatId,
+        msgId!,
+        `*Research started:* ${topic}\nDuration: ${label}\n\nI'll send unique findings periodically. Use /stop to cancel.`,
+        "Markdown",
+      )
+      this.startContinuousResearch(topic, chatId, durationMs)
+    } else if (data === "stop_research") {
+      const stopped = this.stopResearchForChat(chatId)
+      await this.bot.editMessage(
+        chatId,
+        msgId!,
+        stopped ? "Research stopped." : "No active research.",
+        "Markdown",
+        { inline_keyboard: [[{ text: "Back to Menu", callback_data: "action_menu" }]] },
+      )
+    }
+  }
+
+  private isAdminMsg(userId: number): boolean {
+    return this.config !== null && String(userId) === this.config.adminId
+  }
+
+  /** Main menu with inline keyboard */
+  private async sendMainMenu(chatId: number, editMessageId?: number): Promise<void> {
+    if (!this.bot) return
+    const llm = this.llmConfig ? `${this.llmConfig.providerId}/${this.llmConfig.modelId}` : "Not configured"
+    const text = `*Koda Bot*\n\nModel: ${llm}\n\nWhat would you like to do?`
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: "Research", callback_data: "action_research" },
+          { text: "Chat", callback_data: "action_chat" },
+        ],
+        [
+          { text: "Setup Provider", callback_data: "action_setup" },
+          { text: "Status", callback_data: "action_status" },
+        ],
+      ],
+    }
+    if (editMessageId) {
+      await this.bot.editMessage(chatId, editMessageId, text, "Markdown", keyboard)
+    } else {
+      await this.bot.sendMessage(chatId, text, "Markdown", keyboard)
+    }
+  }
+
+  /** Ask for research duration with inline buttons */
+  private async askResearchDuration(chatId: number): Promise<void> {
+    if (!this.bot) return
+    await this.bot.sendMessage(chatId, "*How long should I research?*\n\nI'll keep finding new unique results for the whole duration.", "Markdown", {
+      inline_keyboard: [
+        [
+          { text: "15 min", callback_data: "duration_15m" },
+          { text: "1 hour", callback_data: "duration_1h" },
+        ],
+        [
+          { text: "6 hours", callback_data: "duration_6h" },
+          { text: "Skip (one report)", callback_data: "duration_skip" },
+        ],
+        [{ text: "Cancel", callback_data: "action_cancel" }],
+      ],
+    })
   }
 
   private async handleWizardStep(wizard: SetupWizardState, text: string, chatId: number): Promise<void> {
@@ -238,83 +429,38 @@ export class TelegramService {
 
     switch (cmd.toLowerCase()) {
       case "/start":
-        await this.bot.sendMessage(
-          chatId,
-          `Welcome to Koda Research Bot!\n\nCommands:\n/research <topic> - Start deep research\n/research <topic> | <hours>h - Research with time limit\n/research <topic> | <minutes>m - Research with update interval\n/stop - Stop current research\n/status - Show active tasks\n/setup - Connect a provider (model) via Telegram\n/model - Show current model\n/connect - Show connection info\n/help - Show this help\n\nYou can also just chat with me directly.`,
-        )
+        this.chatFlows.set(chatId, { kind: "idle" })
+        await this.sendMainMenu(chatId)
         break
 
       case "/help":
         await this.bot.sendMessage(
           chatId,
-          `Commands:\n/research <topic> - Start deep research on a topic\n  Example: /research artificial intelligence trends\n  With time limit: /research AI trends | 2h\n  With update interval: /research AI trends | 30m\n/stop - Stop all running research tasks\n/status - Show active research tasks\n/setup - Connect an OpenAI-compatible provider\n/model - Show current model\n/connect - Show provider connection info\n/help - Show this help`,
+          `Commands:\n/research <topic> - Start deep research (or tap Research below)\n/stop - Stop active research\n/status - Show status\n/setup - Connect an OpenAI-compatible provider\n/model - Show current model\n\nTip: Use /start for the button menu.`,
         )
         break
 
       case "/research": {
         if (!arg) {
-          await this.bot.sendMessage(
-            chatId,
-            "Usage: /research <topic>\nExample: /research quantum computing breakthroughs",
-          )
+          // No topic given — start the inline flow
+          this.chatFlows.set(chatId, { kind: "awaiting_topic" })
+          await this.bot.sendMessage(chatId, "*Deep Research*\n\nSend me the topic you want to research:", "Markdown", {
+            inline_keyboard: [[{ text: "Cancel", callback_data: "action_cancel" }]],
+          })
           break
         }
-        // Parse topic (ignore | options for now, do full research immediately)
+        // Topic given directly — ask for duration
         let topic = arg
         const pipeIdx = arg.lastIndexOf("|")
         if (pipeIdx > 0) topic = arg.slice(0, pipeIdx).trim()
-
-        const task: ResearchTask = {
-          id: `research-${Date.now()}`,
-          topic,
-          chatId,
-          updateIntervalMinutes: 30,
-          maxDurationHours: null,
-          startedAt: Date.now(),
-          lastUpdateAt: Date.now(),
-          status: "running",
-        }
-        this.researchTasks.set(task.id, task)
-
-        // Send progress message and update it as research proceeds
-        const progressMsg = await this.bot.sendMessage(chatId, "_Starting research..._")
-        const onProgress = async (text: string) => {
-          await this.bot!.editMessage(chatId, progressMsg.message_id, text, "Markdown").catch(() => {})
-        }
-
-        try {
-          const report = await this.deepResearch(topic, onProgress)
-          task.status = "completed"
-          // Edit progress message into the final report
-          await this.bot.editMessage(
-            chatId,
-            progressMsg.message_id,
-            `*Research: ${topic}*\n\n${report}`,
-            "Markdown",
-          )
-        } catch (err) {
-          task.status = "stopped"
-          await this.bot.editMessage(
-            chatId,
-            progressMsg.message_id,
-            `Research failed: ${err instanceof Error ? err.message : "unknown error"}`,
-          )
-        }
+        this.chatFlows.set(chatId, { kind: "awaiting_duration", topic })
+        await this.askResearchDuration(chatId)
         break
       }
 
       case "/stop": {
-        let stopped = 0
-        for (const task of this.researchTasks.values()) {
-          if (task.status === "running") {
-            task.status = "stopped"
-            stopped++
-          }
-        }
-        await this.bot.sendMessage(
-          chatId,
-          stopped > 0 ? `Stopped ${stopped} research task(s).` : "No running research tasks.",
-        )
+        const stopped = this.stopResearchForChat(chatId)
+        await this.bot.sendMessage(chatId, stopped ? "Research stopped." : "No running research tasks.")
         break
       }
 
@@ -457,18 +603,10 @@ export class TelegramService {
   /**
    * Convert LLM markdown to Telegram-compatible format.
    * Telegram supports *bold*, _italic_, `code`, [text](url).
+   * Uses the robust sanitizer from TelegramBot (fixes unbalanced markers).
    */
   cleanMarkdown(text: string): string {
-    return (
-      text
-        // **bold** -> *bold*
-        .replace(/\*\*([^*]+)\*\*/g, "*$1*")
-        // ## headers -> *bold*
-        .replace(/^#{1,6}\s+(.+)$/gm, "*$1*")
-        // Remove excessive blank lines
-        .replace(/\n{3,}/g, "\n\n")
-        .trim()
-    )
+    return TelegramBot.sanitizeMarkdown(text)
   }
 
   /**
@@ -519,6 +657,114 @@ export class TelegramService {
       "You are a report writer. Create well-structured, insightful reports using *bold* for headers.",
     )
     return this.cleanMarkdown(report)
+  }
+
+  /**
+   * Start continuous research that keeps finding UNIQUE new results
+   * for the given duration (or until stopped).
+   * Each iteration asks the LLM for fresh angles not covered before.
+   */
+  startContinuousResearch(topic: string, chatId: number, durationMs: number | null): void {
+    if (!this.bot) return
+    const id = `cresearch-${Date.now()}`
+    // Stop any existing research for this chat first
+    this.stopResearchForChat(chatId)
+
+    const intervalMs = durationMs === null ? 10 * 60 * 1000 : Math.max(2 * 60 * 1000, Math.min(durationMs / 4, 15 * 60 * 1000))
+    const research: ContinuousResearch = {
+      topic,
+      chatId,
+      startedAt: Date.now(),
+      endsAt: durationMs === null ? null : Date.now() + durationMs,
+      intervalMs,
+      timer: null,
+      previousFindings: [],
+      updateCount: 0,
+    }
+    this.continuousResearch.set(id, research)
+
+    const runIteration = async () => {
+      // Check if still active and within time
+      if (!this.continuousResearch.has(id)) return
+      if (research.endsAt !== null && Date.now() >= research.endsAt) {
+        this.continuousResearch.delete(id)
+        await this.bot?.sendMessage(
+          chatId,
+          `*Research complete:* ${topic}\n\nTime's up! Sent ${research.updateCount} updates.`,
+          "Markdown",
+          { inline_keyboard: [[{ text: "Back to Menu", callback_data: "action_menu" }]] },
+        )
+        return
+      }
+
+      try {
+        research.updateCount++
+        await this.bot?.sendChatAction(chatId, "typing")
+
+        // Ask for FRESH findings not covered before
+        const prevSummary =
+          research.previousFindings.length > 0
+            ? `\n\nAlready covered (DO NOT repeat):\n${research.previousFindings.slice(-3).join("\n---\n")}`
+            : ""
+        const prompt =
+          research.updateCount === 1
+            ? `Research this topic and give the most important initial findings: "${topic}". Be specific with facts, numbers, names, dates.`
+            : `Continue researching "${topic}". Find NEW, UNIQUE information not covered before. Explore a different angle, recent developments, or deeper details.${prevSummary}\n\nIf there's genuinely nothing new, say "NO_NEW_FINDINGS".`
+
+        const findings = await this.llmCall(
+          [{ role: "user", content: prompt }],
+          "You are a thorough researcher. Provide specific, factual information. Use *bold* for key terms.",
+        )
+
+        if (findings.includes("NO_NEW_FINDINGS")) {
+          // Nothing new, wait for next interval
+        } else {
+          const clean = TelegramBot.sanitizeMarkdown(findings)
+          research.previousFindings.push(clean.slice(0, 500))
+          // Keep only last 5 to bound context
+          if (research.previousFindings.length > 5) research.previousFindings.shift()
+
+          await this.bot?.sendMessage(
+            chatId,
+            `*Update #${research.updateCount}:* ${topic}\n\n${clean}`,
+            "Markdown",
+            {
+              inline_keyboard: [[{ text: "Stop Research", callback_data: "stop_research" }]],
+            },
+          )
+        }
+      } catch (err) {
+        console.error("Continuous research iteration error:", err)
+      }
+
+      // Schedule next iteration
+      if (this.continuousResearch.has(id)) {
+        research.timer = setTimeout(runIteration, intervalMs)
+      }
+    }
+
+    // Start first iteration immediately
+    runIteration()
+  }
+
+  /** Stop all continuous research for a chat. Returns true if anything was stopped. */
+  stopResearchForChat(chatId: number): boolean {
+    let stopped = false
+    for (const [id, r] of this.continuousResearch) {
+      if (r.chatId === chatId) {
+        if (r.timer) clearTimeout(r.timer)
+        this.continuousResearch.delete(id)
+        stopped = true
+      }
+    }
+    // Also stop legacy tasks
+    for (const task of this.researchTasks.values()) {
+      if (task.chatId === chatId && task.status === "running") {
+        task.status = "stopped"
+        stopped = true
+      }
+    }
+    return stopped
   }
 
   getRunningTasks(): ResearchTask[] {
