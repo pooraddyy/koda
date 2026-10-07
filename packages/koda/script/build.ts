@@ -207,14 +207,19 @@ for (const item of targets) {
 }
 
 if (Script.release) {
+  // Collect exact archive paths: a glob like ./dist/*.zip fails the whole
+  // upload when no file matches (e.g. linux-only --single builds).
+  const archives: string[] = []
   for (const key of Object.keys(binaries)) {
-    if (key.includes("linux")) {
+    const ext = key.includes("linux") ? "tar.gz" : "zip"
+    if (ext === "tar.gz") {
       await $`tar -czf ../../${key}.tar.gz *`.cwd(`dist/${key}/bin`)
     } else {
       await $`zip -r ../../${key}.zip *`.cwd(`dist/${key}/bin`)
     }
+    archives.push(`./dist/${key}.${ext}`)
   }
-  await $`gh release upload v${Script.version} ./dist/*.zip ./dist/*.tar.gz --clobber --repo ${process.env.GH_REPO}`
+  await $`gh release upload v${Script.version} ${archives} --clobber --repo ${process.env.GH_REPO}`
 }
 
 export { binaries }
