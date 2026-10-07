@@ -713,11 +713,13 @@ export function Autocomplete(props: {
     const count = options().length || 1
     if (!store.visible) return Math.min(10, count)
     positionTick()
-    // The popup renders parent-relative, so clamp against the parent-relative
-    // anchor y (not the absolute one) to avoid clipping when scrolled.
-    const anchor = props.anchor()
-    const relativeY = anchor.y - (anchor.parent?.y ?? 0)
-    return Math.min(10, count, Math.max(1, relativeY))
+    // The popup opens upward from the input, so its height is limited by the
+    // absolute screen rows above the anchor. anchor.parent is irrelevant here:
+    // the popup's absolute top is anchor.y - height, so clamp against anchor.y.
+    // (Clamping against the parent-relative y collapses the popup to 1 row
+    // whenever the prompt sits near the top of its parent container.)
+    const anchorY = props.anchor().y
+    return Math.min(10, count, Math.max(1, anchorY))
   })
 
   let scroll: ScrollBoxRenderable

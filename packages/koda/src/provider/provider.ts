@@ -95,8 +95,12 @@ function timeoutController(ms: number) {
 // fetch layer, on top of `options.fetch` when a custom fetch is configured.
 function timeoutFetch(options: Record<string, any>) {
   const customFetch = options["fetch"]
-  const chunkTimeout = options["chunkTimeout"] ?? 300_000
-  const headerTimeout = options["headerTimeout"] ?? 300_000
+  // 120s (not 300s): if a provider stalls this long on headers or goes idle
+  // mid-stream, fail fast so the retry policy engages instead of leaving the
+  // user staring at "thinking" for 5 minutes per attempt. Providers that
+  // legitimately need longer can still override via options.
+  const chunkTimeout = options["chunkTimeout"] ?? 120_000
+  const headerTimeout = options["headerTimeout"] ?? 120_000
   const timeout = options["timeout"]
 
   return async (input: any, init?: BunFetchRequestInit) => {
