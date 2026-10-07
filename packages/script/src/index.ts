@@ -31,15 +31,29 @@ const CHANNEL = await (async () => {
 })()
 const IS_PREVIEW = CHANNEL !== "latest"
 
+const kodaPkgPath = path.resolve(import.meta.dir, "../../koda/package.json")
+
+async function baseVersion(): Promise<string> {
+  const npm = await fetch("https://registry.npmjs.org/koda-ai/latest")
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data: unknown) =>
+      typeof data === "object" && data !== null && "version" in data ? data.version : null,
+    )
+    .catch(() => null)
+  if (typeof npm === "string") return npm
+  const pkg = (await Bun.file(kodaPkgPath).json()) as { version?: unknown }
+  if (typeof pkg.version !== "string") {
+    throw new Error(
+      "Could not determine base version: npm registry fetch failed and packages/koda/package.json has no version",
+    )
+  }
+  return pkg.version
+}
+
 const VERSION = await (async () => {
   if (env.KODA_VERSION) return env.KODA_VERSION
   if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
-  const version = await fetch("https://registry.npmjs.org/koda-ai/latest")
-    .then((res) => {
-      if (!res.ok) throw new Error(res.statusText)
-      return res.json()
-    })
-    .then((data: any) => data.version)
+  const version = await baseVersion()
   const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
   const t = env.KODA_BUMP?.toLowerCase()
   if (t === "major") return `${major + 1}.0.0`

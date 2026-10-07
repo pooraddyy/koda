@@ -71,11 +71,10 @@ jobs:
 
           If the issue author association is OWNER or MEMBER, skip this compliance check. Do not add the needs:compliance label for organization-owned issues.
 
-          This project has three issue templates that every issue MUST use one of:
+          This project has two issue templates that every issue MUST use one of:
 
           1. Bug Report - requires a Description field with real content
           2. Feature Request - requires a verification checkbox and description, title should start with [FEATURE]:
-          3. Question - requires the Question field with real content
 
           Additionally check:
           - No AI-generated walls of text (long, AI-generated descriptions are not acceptable)
@@ -97,8 +96,6 @@ jobs:
           3. Related functionality or components
           4. Similar feature requests
 
-          Additionally, if the issue mentions keybinds, keyboard shortcuts, or key bindings, note the pinned keybinds issue #4997.
-
           ---
 
           POSTING YOUR COMMENT:
@@ -111,9 +108,7 @@ jobs:
 
           If duplicates were found, include a section about potential duplicates with links.
 
-          If the issue mentions keybinds/keyboard shortcuts, include a note about #4997.
-
-          If the issue IS compliant AND no duplicates were found AND no keybind reference, do NOT comment at all.
+          If the issue IS compliant AND no duplicates were found, do NOT comment at all.
 
           Use this format for the comment:
 
@@ -130,9 +125,6 @@ jobs:
           ---
           This issue might be a duplicate of existing issues. Please check:
           - #[issue_number]: [brief description of similarity]
-
-          [If keybind-related, add:]
-          For keybind-related issues, please also check our pinned keybinds documentation: #4997
 
           [End with if not compliant:]
           If you believe this was flagged incorrectly, please let a maintainer know.
@@ -197,11 +189,10 @@ jobs:
 
           Re-check whether the issue now follows our contributing guidelines and issue templates.
 
-          This project has three issue templates that every issue MUST use one of:
+          This project has two issue templates that every issue MUST use one of:
 
           1. Bug Report - requires a Description field with real content
           2. Feature Request - requires a verification checkbox and description, title should start with [FEATURE]:
-          3. Question - requires the Question field with real content
 
           Additionally check:
           - No AI-generated walls of text (long, AI-generated descriptions are not acceptable)
