@@ -68,7 +68,9 @@ export const { use: usePromptHistory, provider: PromptHistoryProvider } = create
     return {
       move(direction: 1 | -1, input: string) {
         if (!store.history.length) return undefined
-        const current = store.history.at(store.index)
+        // Index 0 is the draft position; compare the typed text against itself
+        // instead of the oldest history entry so navigation isn't blocked.
+        const current = store.index === 0 ? { input } : store.history.at(store.index)
         if (!current) return undefined
         if (current.input !== input && input.length) return
         setStore(

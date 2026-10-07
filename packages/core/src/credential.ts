@@ -1,7 +1,7 @@
 export * as Credential from "./credential"
 
 import { asc, eq } from "drizzle-orm"
-import { Context, Effect, Layer, Schema } from "effect"
+import { Context, Effect, Exit, Layer, Schema } from "effect"
 import { Credential } from "@koda-ai/schema/credential"
 import { Integration } from "@koda-ai/schema/integration"
 import { Database } from "./database/database"
@@ -52,14 +52,18 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const { db } = yield* Database.Service
-    const decode = Schema.decodeUnknownSync(Value)
+    const decode = Schema.decodeExit(Value)
     const stored = (row: typeof CredentialTable.$inferSelect) => {
       if (!row.integration_id) return
+      // Quarantine rows that fail to decode (corruption/schema drift) instead of
+      // letting one bad row defect the whole credential load.
+      const value = decode(row.value)
+      if (!Exit.isSuccess(value)) return
       return new Info({
         id: row.id,
         integrationID: row.integration_id,
         label: row.label,
-        value: decode(row.value),
+        value: value.value,
       })
     }
 

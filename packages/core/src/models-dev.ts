@@ -131,6 +131,10 @@ export const Provider = Schema.Struct({
 
 export type Provider = Schema.Schema.Type<typeof Provider>
 
+export class InvalidPayloadError extends Schema.TaggedErrorClass<InvalidPayloadError>()("ModelsDev.InvalidPayload", {
+  cause: Schema.Unknown,
+}) {}
+
 export const Event = ModelsDev.Event
 
 declare const KODA_MODELS_DEV: Record<string, Provider> | undefined
@@ -221,7 +225,21 @@ const layer = Layer.effect(
           return yield* fetchAndWrite()
         }),
       )
-      return JSON.parse(text) as Record<string, Provider>
+      // A 200 with a truncated/HTML body must not defect the fiber: fall back to
+      // an empty catalog instead of dying.
+      return yield* Effect.try({
+        try: () => JSON.parse(text) as Record<string, Provider>,
+        catch: (cause) => new InvalidPayloadError({ cause }),
+      }).pipe(
+        Effect.catch((error) =>
+          Effect.as(
+            Effect.logWarning("ModelsDev: fetched payload is not valid JSON, using empty catalog", {
+              cause: error.cause,
+            }),
+            {} as Record<string, Provider>,
+          ),
+        ),
+      )
     }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orDie)
 
     const [cachedGet, invalidate] = yield* Effect.cachedInvalidateWithTTL(populate, Duration.infinity)

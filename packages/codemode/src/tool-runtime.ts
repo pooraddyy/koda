@@ -316,12 +316,26 @@ export const copyOut = (value: unknown, undefinedAsNull = false): unknown => {
 const definitions = <R>(
   tools: HostTools<R>,
   path: ReadonlyArray<string> = [],
+  seen: Set<object> = new Set(),
 ): Array<{ path: string; definition: Definition<R> }> => {
   const entries: Array<{ path: string; definition: Definition<R> }> = []
   for (const [name, value] of Object.entries(tools)) {
     const next = [...path, name]
     if (isDefinition(value)) entries.push({ path: next.join("."), definition: value })
-    else if (typeof value !== "function") entries.push(...definitions(value, next))
+    else if (typeof value !== "function") {
+      // A self-referential tools object would recurse forever; fail with a clear validation
+      // error instead of an unhandled stack overflow.
+      if (value !== null && typeof value === "object") {
+        if (seen.has(value))
+          throw new ToolRuntimeError(
+            "InvalidDataValue",
+            `Cycle detected in tools at "${next.join(".")}": the tools object must form a tree.`,
+          )
+        seen.add(value)
+      }
+      entries.push(...definitions(value, next, seen))
+      if (value !== null && typeof value === "object") seen.delete(value)
+    }
   }
   return entries
 }

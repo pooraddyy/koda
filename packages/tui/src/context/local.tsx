@@ -165,6 +165,8 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       const state = {
         pending: false,
       }
+      // Chain same-process writes so rapid saves persist in order.
+      let write = Promise.resolve()
 
       function save() {
         if (!modelStore.ready) {
@@ -172,11 +174,17 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
-          recent: modelStore.recent,
-          favorite: modelStore.favorite,
-          variant: modelStore.variant,
-        })
+        write = write
+          .then(() =>
+            writeJsonAtomic(filePath, {
+              recent: modelStore.recent,
+              favorite: modelStore.favorite,
+              variant: modelStore.variant,
+            }),
+          )
+          .catch((error) => {
+            console.error("Failed to write model state", { error })
+          })
       }
 
       readJson<unknown>(filePath)
@@ -421,6 +429,8 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       const state = {
         pending: false,
       }
+      // Chain same-process writes so rapid saves persist in order.
+      let write = Promise.resolve()
 
       function save() {
         if (!sessionStore.ready) {
@@ -428,9 +438,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
-          pinned: sessionStore.pinned,
-        })
+        write = write
+          .then(() =>
+            writeJsonAtomic(filePath, {
+              pinned: sessionStore.pinned,
+            }),
+          )
+          .catch((error) => {
+            console.error("Failed to write session state", { error })
+          })
       }
 
       readJson<unknown>(filePath)

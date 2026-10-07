@@ -713,7 +713,11 @@ export function Autocomplete(props: {
     const count = options().length || 1
     if (!store.visible) return Math.min(10, count)
     positionTick()
-    return Math.min(10, count, Math.max(1, props.anchor().y))
+    // The popup renders parent-relative, so clamp against the parent-relative
+    // anchor y (not the absolute one) to avoid clipping when scrolled.
+    const anchor = props.anchor()
+    const relativeY = anchor.y - (anchor.parent?.y ?? 0)
+    return Math.min(10, count, Math.max(1, relativeY))
   })
 
   let scroll: ScrollBoxRenderable

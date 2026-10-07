@@ -176,12 +176,16 @@ const runImport = Effect.fn("Cli.import.body")(function* (file: string, ctx: Ins
     return
   }
 
-  const info = Schema.decodeUnknownSync(Session.Info)({
-    ...exportData.info,
-    projectID: ctx.project.id,
-    directory: ctx.directory,
-    path: path.relative(path.resolve(ctx.worktree), ctx.directory).replaceAll("\\", "/"),
-  }) as Session.Info
+  const info = yield* Effect.try({
+    try: () =>
+      Schema.decodeUnknownSync(Session.Info)({
+        ...exportData.info,
+        projectID: ctx.project.id,
+        directory: ctx.directory,
+        path: path.relative(path.resolve(ctx.worktree), ctx.directory).replaceAll("\\", "/"),
+      }) as Session.Info,
+    catch: () => new CliError({ message: "Invalid import file" }),
+  })
   const row = Session.toRow(info)
   yield* db
     .insert(SessionTable)
@@ -194,7 +198,10 @@ const runImport = Effect.fn("Cli.import.body")(function* (file: string, ctx: Ins
     .pipe(Effect.orDie)
 
   for (const msg of exportData.messages) {
-    const msgInfo = decodeMessageInfo(msg.info) as SessionV1.Info
+    const msgInfo = yield* Effect.try({
+      try: () => decodeMessageInfo(msg.info),
+      catch: () => new CliError({ message: "Invalid import file" }),
+    })
     const { id, sessionID: _, ...msgData } = msgInfo
     yield* db
       .insert(MessageTable)
@@ -209,7 +216,10 @@ const runImport = Effect.fn("Cli.import.body")(function* (file: string, ctx: Ins
       .pipe(Effect.orDie)
 
     for (const part of msg.parts) {
-      const partInfo = decodePart(part) as SessionV1.Part
+      const partInfo = yield* Effect.try({
+        try: () => decodePart(part),
+        catch: () => new CliError({ message: "Invalid import file" }),
+      })
       const { id: partId, sessionID: _s, messageID, ...partData } = partInfo
       yield* db
         .insert(PartTable)

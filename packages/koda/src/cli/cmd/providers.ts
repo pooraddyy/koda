@@ -14,6 +14,7 @@ import { Global } from "@koda-ai/core/global"
 import { Plugin } from "../../plugin"
 import type { Hooks } from "@koda-ai/plugin"
 import { Process } from "@/util/process"
+import { isRecord } from "@/util/record"
 import { errorMessage } from "@/util/error"
 import { text } from "node:stream/consumers"
 import { Effect, Option } from "effect"
@@ -35,6 +36,14 @@ const cliTry = <Value>(message: string, fn: () => PromiseLike<Value>) =>
     try: fn,
     catch: (error) => new CliError({ message: message + errorMessage(error) }),
   })
+
+const isWellKnownAuth = (value: unknown): value is { auth: { command: string[]; env: string } } =>
+  isRecord(value) &&
+  isRecord(value.auth) &&
+  Array.isArray(value.auth.command) &&
+  value.auth.command.length > 0 &&
+  value.auth.command.every((entry) => typeof entry === "string") &&
+  typeof value.auth.env === "string"
 
 const handlePluginAuth = Effect.fn("Cli.providers.pluginAuth")(function* (
   plugin: { auth: PluginAuth },
@@ -324,14 +333,18 @@ export const ProvidersLoginCommand = effectCmd({
     yield* Prompt.intro("Add credential")
     if (args.url) {
       const url = args.url.replace(/\/+$/, "")
-      const wellknown = (yield* cliTry(`Failed to load auth provider metadata from ${url}: `, () =>
+      const wellknown: unknown = yield* cliTry(`Failed to load auth provider metadata from ${url}: `, () =>
         fetch(`${url}/.well-known/koda`).then((x) => x.json()),
-      )) as {
-        auth: { command: string[]; env: string }
+      )
+      if (!isWellKnownAuth(wellknown)) {
+        return yield* new CliError({
+          message: `Invalid auth provider metadata from ${url}: expected { auth: { command: string[], env: string } }`,
+        })
       }
-      yield* Prompt.log.info(`Running \`${wellknown.auth.command.join(" ")}\``)
+      const { command, env } = wellknown.auth
+      yield* Prompt.log.info(`Running \`${command.join(" ")}\``)
       const abort = new AbortController()
-      const proc = Process.spawn(wellknown.auth.command, { stdout: "pipe", stderr: "inherit", abort: abort.signal })
+      const proc = Process.spawn(command, { stdout: "pipe", stderr: "inherit", abort: abort.signal })
       if (!proc.stdout) {
         yield* Prompt.log.error("Failed")
         yield* Prompt.outro("Done")
@@ -345,7 +358,7 @@ export const ProvidersLoginCommand = effectCmd({
         yield* Prompt.outro("Done")
         return
       }
-      yield* Effect.orDie(authSvc.set(url, { type: "wellknown", key: wellknown.auth.env, token: token.trim() }))
+      yield* Effect.orDie(authSvc.set(url, { type: "wellknown", key: env, token: token.trim() }))
       yield* Prompt.log.success("Logged into " + url)
       yield* Prompt.outro("Done")
       return

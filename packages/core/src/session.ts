@@ -108,7 +108,13 @@ export class PromptConflictError extends Schema.TaggedErrorClass<PromptConflictE
 export const MessageNotFoundError = SessionRevert.MessageNotFoundError
 export type MessageNotFoundError = SessionRevert.MessageNotFoundError
 
-export type Error = NotFoundError | MessageDecodeError | OperationUnavailableError | PromptConflictError
+export type Error =
+  | NotFoundError
+  | MessageDecodeError
+  | OperationUnavailableError
+  | PromptConflictError
+  | EventV2.InvalidDurableEventError
+  | SessionInput.PromptDecodeError
 
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
@@ -138,7 +144,10 @@ export interface Interface {
     sessionID: SessionSchema.ID
     after?: number
     limit: number
-  }) => Effect.Effect<{ events: ReadonlyArray<SessionEvent.DurableEvent>; hasMore: boolean }, NotFoundError>
+  }) => Effect.Effect<
+    { events: ReadonlyArray<SessionEvent.DurableEvent>; hasMore: boolean },
+    NotFoundError | EventV2.InvalidDurableEventError
+  >
   readonly switchAgent: (input: { sessionID: SessionSchema.ID; agent: string }) => Effect.Effect<void, NotFoundError>
   readonly switchModel: (input: {
     sessionID: SessionSchema.ID
@@ -150,7 +159,7 @@ export interface Interface {
     prompt: PromptInput.Prompt
     delivery?: SessionInput.Delivery
     resume?: boolean
-  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError>
+  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | SessionInput.PromptDecodeError>
   readonly shell: (input: {
     id?: EventV2.ID
     sessionID: SessionSchema.ID

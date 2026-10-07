@@ -141,12 +141,10 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
         "pty.connect",
         Effect.fn("PtyHandler.connect")(function* (ctx) {
           const pty = yield* Pty.Service
-          const exists = yield* pty.get(ctx.params.ptyID).pipe(
-            Effect.as(true),
-            Effect.catchTag("Pty.NotFoundError", () => Effect.succeed(false)),
-          )
-          if (!exists) return HttpServerResponse.empty({ status: 404 })
 
+          // The auth middleware skips credential checks for ticketed URLs, so the ticket is
+          // consumed before the existence check: checking existence first would let an
+          // unauthenticated caller probe PTY IDs (timestamp-sequential) via 404 vs 403.
           const url = new URL(ctx.request.url, "http://localhost")
           const ticket = url.searchParams.get(PTY_CONNECT_TICKET_QUERY)
           if (ticket) {
@@ -155,6 +153,13 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
               : false
             if (!valid) return HttpServerResponse.empty({ status: 403 })
           }
+
+          const exists = yield* pty.get(ctx.params.ptyID).pipe(
+            Effect.as(true),
+            Effect.catchTag("Pty.NotFoundError", () => Effect.succeed(false)),
+          )
+          if (!exists) return HttpServerResponse.empty({ status: 404 })
+
           const parsedCursor = url.searchParams.get("cursor")
           const cursorNumber = parsedCursor === null ? undefined : Number(parsedCursor)
           const cursor =
@@ -162,7 +167,13 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
               ? cursorNumber
               : undefined
 
-          const socket = yield* Effect.orDie(ctx.request.upgrade)
+          // A plain (non-upgrade) GET fails the upgrade with an expected HttpServerError
+          // ("Not an upgradeable ServerRequest"); answer 426 Upgrade Required instead of
+          // letting it die as a 500.
+          const socket = yield* ctx.request.upgrade.pipe(
+            Effect.catchTag("HttpServerError", () => Effect.succeed(undefined)),
+          )
+          if (socket === undefined) return HttpServerResponse.empty({ status: 426 })
           const write = yield* socket.writer
           const closeAccepted = (event: Socket.CloseEvent) =>
             socket
@@ -174,9 +185,11 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
               )
 
           // Outbound frames flow through one queue drained by a single writer so replay, live
-          // output, and the close frame keep their order.
+          // output, and the close frame keep their order. The queue is bounded and sliding: a
+          // chatty PTY with a slow client drops the oldest frames instead of growing memory
+          // without bound.
           // TODO: Integrate graceful-shutdown socket tracking before clients migrate to this route.
-          const outbox = yield* Queue.unbounded<string | Uint8Array | Socket.CloseEvent>()
+          const outbox = yield* Queue.sliding<string | Uint8Array | Socket.CloseEvent>(256)
           const attachment = yield* pty
             .attach(ctx.params.ptyID, {
               cursor,
@@ -193,29 +206,33 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
             )
           if (!attachment) return HttpServerResponse.empty()
 
-          for (const chunk of PtyProtocol.chunks(attachment.replay)) Queue.offerUnsafe(outbox, chunk)
-          Queue.offerUnsafe(outbox, PtyProtocol.metaFrame(attachment.cursor))
-          attachment.activate()
+          // The attachment is detached by a single ensuring around the whole post-attach
+          // block: replay framing, the meta frame, and activation can all throw before the
+          // race below starts, and each would otherwise leak the attachment.
+          yield* Effect.gen(function* () {
+            for (const chunk of PtyProtocol.chunks(attachment.replay)) Queue.offerUnsafe(outbox, chunk)
+            Queue.offerUnsafe(outbox, PtyProtocol.metaFrame(attachment.cursor))
+            attachment.activate()
 
-          const drain = Effect.gen(function* () {
-            while (true) {
-              const item = yield* Queue.take(outbox)
-              yield* write(item)
-              if (item instanceof Socket.CloseEvent) return
-            }
-          })
+            const drain = Effect.gen(function* () {
+              while (true) {
+                const item = yield* Queue.take(outbox)
+                yield* write(item)
+                if (item instanceof Socket.CloseEvent) return
+              }
+            })
 
-          yield* Effect.race(
-            drain,
-            socket.runRaw((message) => {
-              const decoded = PtyProtocol.decodeInput(message)
-              if (decoded !== undefined) attachment.write(decoded)
-            }),
-          ).pipe(
-            Effect.catchReason("SocketError", "SocketCloseError", () => Effect.void),
-            Effect.ensuring(Effect.sync(() => attachment.detach())),
-            Effect.orDie,
-          )
+            yield* Effect.race(
+              drain,
+              socket.runRaw((message) => {
+                const decoded = PtyProtocol.decodeInput(message)
+                if (decoded !== undefined) attachment.write(decoded)
+              }),
+            ).pipe(
+              Effect.catchReason("SocketError", "SocketCloseError", () => Effect.void),
+              Effect.orDie,
+            )
+          }).pipe(Effect.ensuring(Effect.sync(() => attachment.detach())))
           return HttpServerResponse.empty()
         }),
       )

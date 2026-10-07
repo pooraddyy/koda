@@ -37,8 +37,7 @@ export function DialogDebug() {
     const text = entries()
       .map((entry) => `${entry.label}: ${entry.value}`)
       .join("\n")
-    void clipboard
-      .write?.(text)
+    void (clipboard.write?.(text) ?? Promise.resolve())
       .then(() => {
         setCopied(true)
         toast.show({ message: "Debug info copied to clipboard", variant: "info" })

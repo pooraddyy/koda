@@ -472,7 +472,8 @@ export const RunCommand = effectCmd({
             })
             const id = forked.data?.id
             if (!id) {
-              return
+              UI.error(formatRunError(forked.error))
+              process.exit(1)
             }
 
             return {
@@ -497,7 +498,8 @@ export const RunCommand = effectCmd({
           })
           const id = forked.data?.id
           if (!id) {
-            return
+            UI.error(formatRunError(forked.error))
+            process.exit(1)
           }
 
           return {
@@ -837,7 +839,6 @@ export const RunCommand = effectCmd({
             process.exitCode = 1
           })
           async function finish() {
-            if (args.attach) return
             const error = await completed
             if (error) process.exitCode = 1
           }

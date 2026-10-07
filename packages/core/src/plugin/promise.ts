@@ -26,10 +26,20 @@ export function fromPromise(plugin: Plugin) {
         const context = yield* Effect.context<Scope.Scope>()
 
         // Run a hook registration on the plugin scope and resolve once it is registered.
+        // Defects/interruptions are logged via .catch: the Promise-plugin contract has
+        // no channel for them, and an unhandled rejection would crash the process.
         const register = (effect: Effect.Effect<HostRegistration, never, Scope.Scope>): Promise<Registration> =>
-          Effect.runPromiseWith(context)(Scope.provide(scope)(effect)).then((registration) => ({
-            dispose: () => Effect.runPromiseWith(context)(registration.dispose),
-          }))
+          Effect.runPromiseWith(context)(Scope.provide(scope)(effect))
+            .then((registration) => ({
+              dispose: () =>
+                Effect.runPromiseWith(context)(registration.dispose).catch((cause) => {
+                  Effect.runFork(Effect.logError("PluginPromise: plugin dispose failed", { cause }))
+                }),
+            }))
+            .catch((cause) => {
+              Effect.runFork(Effect.logError("PluginPromise: plugin hook registration failed", { cause }))
+              return { dispose: () => Promise.resolve() }
+            })
 
         const run = (effect: Effect.Effect<void>) => Effect.runPromiseWith(context)(effect)
 

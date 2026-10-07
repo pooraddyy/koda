@@ -60,6 +60,14 @@ export class UpgradeFailedError extends Schema.TaggedErrorClass<UpgradeFailedErr
   }
 }
 
+export class LatestCheckError extends Schema.TaggedErrorClass<LatestCheckError>()("InstallationLatestCheckError", {
+  cause: Schema.optional(Schema.Defect()),
+}) {
+  override get message() {
+    return "Could not determine the latest koda version"
+  }
+}
+
 // Response schemas for external version APIs
 const GitHubRelease = Schema.Struct({ tag_name: Schema.String })
 const NpmPackage = Schema.Struct({ version: Schema.String })
@@ -75,7 +83,7 @@ const ScoopManifest = NpmPackage
 export interface Interface {
   readonly info: () => Effect.Effect<Info>
   readonly method: () => Effect.Effect<Method>
-  readonly latest: (method?: Method) => Effect.Effect<string>
+  readonly latest: (method?: Method) => Effect.Effect<string, LatestCheckError>
   readonly upgrade: (method: Method, target: string) => Effect.Effect<void, UpgradeFailedError>
 }
 
@@ -174,7 +182,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
       info: Effect.fn("Installation.info")(function* () {
         return {
           version: InstallationVersion,
-          latest: yield* result.latest(),
+          latest: yield* result.latest().pipe(Effect.orElseSucceed(() => "unknown")),
         }
       }),
       method: Effect.fn("Installation.method")(function* () {
@@ -219,7 +227,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
           if (formula.includes("/")) {
             const infoJson = yield* text(["brew", "info", "--json=v2", formula])
             const info = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(BrewInfoV2))(infoJson)
-            return info.formulae[0].versions.stable
+            const first = info.formulae[0]
+            if (!first) return yield* new LatestCheckError({})
+            return first.versions.stable
           }
           const response = yield* httpOk.execute(
             HttpClientRequest.get("https://formulae.brew.sh/api/formula/koda.json").pipe(HttpClientRequest.acceptJson),
@@ -245,7 +255,9 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
             ).pipe(HttpClientRequest.setHeaders({ Accept: "application/json;odata=verbose" })),
           )
           const data = yield* HttpClientResponse.schemaBodyJson(ChocoPackage)(response)
-          return data.d.results[0].Version
+          const first = data.d.results[0]
+          if (!first) return yield* new LatestCheckError({})
+          return first.Version
         }
 
         if (detectedMethod === "scoop") {
@@ -265,7 +277,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
         )
         const data = yield* HttpClientResponse.schemaBodyJson(GitHubRelease)(response)
         return data.tag_name.replace(/^v/, "")
-      }, Effect.orDie),
+      }, Effect.mapError((cause) => (cause instanceof LatestCheckError ? cause : new LatestCheckError({ cause })))),
       upgrade: Effect.fn("Installation.upgrade")(function* (m: Method, target: string) {
         let upgradeResult: { code: number; stdout: string; stderr: string } | undefined
         switch (m) {

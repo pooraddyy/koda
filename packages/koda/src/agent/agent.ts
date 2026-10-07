@@ -76,7 +76,7 @@ export interface Interface {
       whenToUse: string
       systemPrompt: string
     },
-    Provider.DefaultModelError
+    Provider.DefaultModelError | Provider.InitError
   >
 }
 

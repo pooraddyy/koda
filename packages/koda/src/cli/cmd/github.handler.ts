@@ -17,6 +17,7 @@ import type {
   PullRequestEvent,
 } from "@octokit/webhooks-types"
 import { UI } from "../ui"
+import { CliError } from "../effect-cmd"
 import { ModelsDev } from "@koda-ai/core/models-dev"
 import { InstanceRef } from "@/effect/instance-ref"
 import { SessionShare } from "@/share/session"
@@ -200,7 +201,7 @@ export const githubInstall = Effect.fn("Cli.github.install")(function* () {
             `    1. Commit the \`${WORKFLOW_FILE}\` file and push`,
             step2,
             "",
-            "    3. Go to a GitHub issue and comment `/oc summarize` to see the agent in action",
+            "    3. Go to a GitHub issue and comment `/koda summarize` to see the agent in action",
             "",
             "   Learn more about the GitHub agent - https://github.com/pooraddyy/koda",
           ].join("\n"),
@@ -347,8 +348,6 @@ on:
 jobs:
   koda:
     if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
       contains(github.event.comment.body, ' /koda') ||
       startsWith(github.event.comment.body, '/koda')
     runs-on: ubuntu-latest
@@ -375,6 +374,15 @@ jobs:
   })
 })
 
+function parseMockContext(event: string | undefined): Context {
+  if (!event) throw new CliError({ message: "Missing --event payload for mock run" })
+  try {
+    return JSON.parse(event) as Context
+  } catch {
+    throw new CliError({ message: "Invalid --event payload: expected JSON" })
+  }
+}
+
 export const githubRun = Effect.fn("Cli.github.run")(function* (args: { event?: string; token?: string }) {
   const ctx = yield* InstanceRef
   if (!ctx) return yield* Effect.die("InstanceRef not provided")
@@ -388,7 +396,7 @@ export const githubRun = Effect.fn("Cli.github.run")(function* (args: { event?: 
   yield* Effect.promise(async () => {
     const isMock = args.token || args.event
 
-    const context = isMock ? (JSON.parse(args.event!) as Context) : github.context
+    const context = isMock ? parseMockContext(args.event) : github.context
     if (!SUPPORTED_EVENTS.includes(context.eventName as (typeof SUPPORTED_EVENTS)[number])) {
       core.setFailed(`Unsupported event type: ${context.eventName}`)
       process.exit(1)
@@ -744,7 +752,7 @@ export const githubRun = Effect.fn("Cli.github.run")(function* (args: { event?: 
       }
 
       const reviewContext = getReviewCommentContext()
-      const mentions = (process.env["MENTIONS"] || "/koda,/oc")
+      const mentions = (process.env["MENTIONS"] || "/koda")
         .split(",")
         .map((m) => m.trim().toLowerCase())
         .filter(Boolean)

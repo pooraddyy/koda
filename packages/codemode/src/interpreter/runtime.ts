@@ -609,6 +609,11 @@ class Interpreter<R> {
   private lastValue: unknown
   // Caps how many eagerly forked tool calls run at once (the parallel-call concurrency cap).
   private readonly callPermits: Semaphore.Semaphore
+  // Byte budget for captured console output, enforced during capture so a log loop cannot
+  // OOM the host before the post-execution truncation runs. Undefined means unbounded.
+  private readonly maxLogBytes: number | undefined
+  private logBytes = 0
+  private logTruncated = false
   // Fiber-backed promises whose settlement no program construct has observed yet. Successful
   // program completion drains these (like a runtime waiting on in-flight work at exit) and
   // surfaces a never-awaited failure as an unhandled-rejection diagnostic.
@@ -618,12 +623,14 @@ class Interpreter<R> {
     invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>,
     toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
     logs: Array<string> = [],
+    maxLogBytes?: number,
   ) {
     const globalScope = new Map<string, Binding>()
     this.scopes = [globalScope]
     this.invokeTool = invokeTool
     this.toolKeys = toolKeys
     this.logs = logs
+    this.maxLogBytes = maxLogBytes
     this.lastValue = undefined
     this.callPermits = Semaphore.makeUnsafe(TOOL_CALL_CONCURRENCY)
     globalScope.set("tools", { mutable: false, value: new ToolReference([]) })
@@ -721,8 +728,10 @@ class Interpreter<R> {
 
   // Eagerly starts a tool call on a supervised child fiber (so the execution timeout and
   // scope teardown interrupt it) gated by the concurrency semaphore, and wraps the fiber in a
-  // first-class promise value. `startImmediately` makes the runtime admit the call - charging
-  // the tool-call budget and firing onToolCallStart - at the call site, before any await.
+  // first-class promise value. `startImmediately` forks the fiber at the call site - before any
+  // await - but the fiber body starts with the semaphore permit: under saturation the call
+  // waits in `withPermit` before invokeTool runs, so the tool-call budget is charged and
+  // onToolCallStart fires when the call actually starts, not at the call site.
   private createToolCallPromise(
     path: ReadonlyArray<string>,
     args: Array<unknown>,
@@ -742,10 +751,17 @@ class Interpreter<R> {
 
   // The promise's settlement as an Exit, marking it observed for unhandled-rejection tracking.
   // Fiber settlement is idempotent, so observing the same promise repeatedly (await twice,
-  // Promise.all([p, p])) never re-runs the underlying call.
+  // Promise.all([p, p])) never re-runs the underlying call. The pending-settlements entry is
+  // deleted lazily - only when the observation actually runs. Deleting eagerly (e.g. during
+  // Promise.all's .map()) would untrack members whose await never runs because the join loop
+  // stopped at an earlier rejection, silently losing their failures.
   private observePromise(promise: SandboxPromise): Effect.Effect<Exit.Exit<unknown, unknown>> {
-    this.pendingSettlements.delete(promise)
-    return promise.fiber !== undefined ? Fiber.await(promise.fiber) : Effect.exit(promise.immediate ?? Effect.void)
+    return Effect.suspend(() => {
+      this.pendingSettlements.delete(promise)
+      return promise.fiber !== undefined
+        ? Fiber.await(promise.fiber)
+        : Effect.exit(promise.immediate ?? Effect.void)
+    })
   }
 
   // `await promise`: succeed with the fulfilled value or re-raise the failure so try/catch
@@ -1871,10 +1887,20 @@ class Interpreter<R> {
       throw new InterpreterRuntimeError(`Unsupported update operator '${operator}'.`, node)
     }
 
+    // Update expressions ToNumber their operand; a SandboxDate coerces to its epoch-ms time
+    // value (mirrors evaluateUnaryExpression), so `d++` advances the timestamp instead of
+    // producing NaN. Other objects coerce via their string form first.
+    const toOperand = (value: unknown): unknown =>
+      value instanceof SandboxDate
+        ? value.time
+        : value !== null && typeof value === "object"
+          ? coerceToString(value)
+          : value
+
     if (argument.type === "Identifier") {
       return Effect.sync(() => {
         const name = getString(argument, "name")
-        const current = Number(this.getIdentifierValue(name, argument))
+        const current = Number(toOperand(this.getIdentifierValue(name, argument)))
         const next = current + increment
         this.setIdentifierValue(name, next, argument)
         return prefix ? next : current
@@ -1883,7 +1909,7 @@ class Interpreter<R> {
 
     if (argument.type === "MemberExpression") {
       return this.modifyMember(argument, (current) => {
-        const value = Number(current)
+        const value = Number(toOperand(current))
         const next = value + increment
         return Effect.succeed({ write: true, next, result: prefix ? next : value })
       })
@@ -1957,7 +1983,20 @@ class Interpreter<R> {
   private invokeConsole(name: string, args: Array<unknown>, node: AstNode): undefined {
     if (!consoleMethods.has(name))
       throw new InterpreterRuntimeError(`console.${name} is not available in CodeMode.`, node)
-    this.logs.push(publicErrorMessage(this.formatConsoleMessage(name, args, node)))
+    const line = publicErrorMessage(this.formatConsoleMessage(name, args, node))
+    if (this.maxLogBytes !== undefined) {
+      // Enforce the output budget during capture: a log loop would otherwise grow `logs`
+      // without bound and OOM the host before the post-execution truncation runs.
+      if (this.logBytes + utf8ByteLength(line) + 1 > this.maxLogBytes) {
+        if (!this.logTruncated) {
+          this.logTruncated = true
+          this.logs.push(`[logs truncated: exceeded the ${this.maxLogBytes}-byte output limit]`)
+        }
+        return undefined
+      }
+      this.logBytes += utf8ByteLength(line) + 1
+    }
+    this.logs.push(line)
     return undefined
   }
 
@@ -2045,7 +2084,14 @@ class Interpreter<R> {
   private consoleTableColumns(value: unknown, node: AstNode): ReadonlyArray<string> | undefined {
     if (value === undefined) return undefined
     if (containsRuntimeReference(value)) return undefined
-    const columns = copyOut(copyIn(value, "console.table columns"), true)
+    // Formatting never fails the program: a columns value that cannot cross the data
+    // boundary (un-awaited promise, excessive depth, ...) is ignored instead of throwing.
+    let columns: unknown
+    try {
+      columns = copyOut(copyIn(value, "console.table columns"), true)
+    } catch {
+      return undefined
+    }
     return Array.isArray(columns) ? columns.map((column) => String(column)) : undefined
   }
 
@@ -2133,9 +2179,10 @@ class Interpreter<R> {
 
     switch (ref.name) {
       case "all": {
-        // Mark every promise element observed up-front (Promise.all handles all of its
-        // members' failures, as in JS), then join in index order; the first failure rejects
-        // the whole call while unrelated in-flight members keep running.
+        // Observations are built up-front but each member is marked observed only as the
+        // join reaches it; the first failure rejects the whole call while unrelated
+        // in-flight members keep running, and members never reached stay tracked so their
+        // failures surface as unhandled rejections instead of being silently lost.
         const settles = items.map((item) =>
           item instanceof SandboxPromise ? this.settlePromise(item, node) : Effect.succeed(item),
         )
@@ -3365,7 +3412,7 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
 
   const operation = Effect.gen(function* () {
     const program = parseProgram(options.code)
-    const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
+    const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs, limits.maxOutputBytes)
     const value = yield* interpreter.run(program)
     const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
     return {

@@ -152,8 +152,16 @@ export type TuiInput = {
   pluginHost: TuiPluginHost
 }
 
-function errorMessage(error: unknown) {
-  if (
+function parseInitialRoute(raw: string | undefined) {
+  if (!raw) return undefined
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}
+
+function errorMessage(error: unknown) {  if (
     typeof error === "object" &&
     error !== null &&
     "data" in error &&
@@ -275,7 +283,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                     >
                       <TuiStartupProvider
                         value={{
-                          initialRoute: process.env.KODA_ROUTE ? JSON.parse(process.env.KODA_ROUTE) : undefined,
+                          initialRoute: parseInitialRoute(process.env.KODA_ROUTE),
                           skipInitialLoading: Boolean(process.env.KODA_FAST_BOOT),
                         }}
                       >
@@ -440,8 +448,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   renderer.console.onCopySelection = async (text: string) => {
     if (!text || text.length === 0) return
 
-    await clipboard
-      .write?.(text)
+    await (clipboard.write?.(text) ?? Promise.resolve())
       .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
       .catch(toast.error)
 
@@ -469,12 +476,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       }
 
       const title = session.title.length > 40 ? session.title.slice(0, 37) + "…" : session.title
-      renderer.setTerminalTitle(`OC | ${title}`)
+      renderer.setTerminalTitle(`Koda | ${title}`)
       return
     }
 
     if (route.data.type === "plugin") {
-      renderer.setTerminalTitle(`OC | ${route.data.id}`)
+      renderer.setTerminalTitle(`Koda | ${route.data.id}`)
     }
   })
 
@@ -603,8 +610,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         run: async () => {
           const workspace = currentWorktreeWorkspace()
           if (!workspace?.directory) return
-          await clipboard
-            .write?.(workspace.directory)
+          await (clipboard.write?.(workspace.directory) ?? Promise.resolve())
             .then(() => toast.show({ message: "Copied worktree path", variant: "info" }))
             .catch(toast.error)
           dialog.clear()

@@ -83,7 +83,7 @@ export function createKodaClient(config?: Config & { directory?: string; experim
   )
   client.interceptors.response.use((response) => {
     const contentType = response.headers.get("content-type")
-    if (contentType === "text/html")
+    if (contentType?.startsWith("text/html"))
       throw new Error("Request is not supported by this version of Koda Server (Server responded with text/html)")
 
     return response

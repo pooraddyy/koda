@@ -152,12 +152,31 @@ const live: Layer.Layer<
           return !match || match.action !== "ask"
         })
 
+        function approvalKey(name: string, args: string): string {
+          try {
+            return `${name}:${stableStringify(JSON.parse(args))}`
+          } catch {
+            return name
+          }
+        }
+
+        function stableStringify(value: unknown): string {
+          if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`
+          if (!value || typeof value !== "object") return JSON.stringify(value)
+          return `{${Object.entries(value)
+            .toSorted(([a], [b]) => a.localeCompare(b))
+            .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
+            .join(",")}}`
+        }
+
         const approvedToolsForSession = new Set<string>()
         workflowModel.approvalHandler = bridge.bind(async (approvalTools) => {
-          const uniqueNames = [...new Set(approvalTools.map((t: { name: string }) => t.name))] as string[]
+          // Memo is keyed by tool name + stable args hash: approving `bash` with
+          // `ls` must not auto-approve a later `bash` with `rm -rf`.
+          const approvalKeys = approvalTools.map((t: { name: string; args: string }) => approvalKey(t.name, t.args))
           // Auto-approve tools that were already approved in this session
           // (prevents infinite approval loops for server-side MCP tools)
-          if (uniqueNames.every((name) => approvedToolsForSession.has(name))) {
+          if (approvalKeys.every((key) => approvedToolsForSession.has(key))) {
             return { approved: true }
           }
 
@@ -194,8 +213,11 @@ const live: Layer.Layer<
                 ruleset: [],
               }),
             )
-            for (const name of uniqueNames) approvedToolsForSession.add(name)
-            workflowModel.sessionPreapprovedTools = [...(workflowModel.sessionPreapprovedTools ?? []), ...uniqueNames]
+            for (const key of approvalKeys) approvedToolsForSession.add(key)
+            workflowModel.sessionPreapprovedTools = [
+              ...(workflowModel.sessionPreapprovedTools ?? []),
+              ...new Set(approvalTools.map((t: { name: string }) => t.name)),
+            ]
             return { approved: true }
           } catch {
             return { approved: false }

@@ -183,6 +183,9 @@ function DiffViewer(props: { api: TuiPluginApi }) {
     setSelectedFileIndex(undefined)
     setSelectedHunk(undefined)
     setReviewedFileNames(new Set<string>())
+    // Drop renderables from the previous diff so stale destroyed nodes aren't read.
+    patchNodeByFileIndex.clear()
+    diffNodeByFileIndex.clear()
   })
 
   const ensureHighlightedFileNode = () => {
@@ -769,16 +772,16 @@ function DiffViewer(props: { api: TuiPluginApi }) {
                 <text fg={theme().textMuted}>Loading diff…</text>
               </box>
             </Match>
-            <Match when={!diff.loading && files().length === 0}>
-              <Separator axis="x" />
-              <box flexGrow={1} paddingLeft={1}>
-                <text fg={theme().textMuted}>No diff!</text>
-              </box>
-            </Match>
             <Match when={!diff.loading && diff.error}>
               <Separator axis="x" />
               <box flexGrow={1} paddingLeft={1}>
                 <text fg={theme().error}>Failed to load diff</text>
+              </box>
+            </Match>
+            <Match when={!diff.loading && files().length === 0}>
+              <Separator axis="x" />
+              <box flexGrow={1} paddingLeft={1}>
+                <text fg={theme().textMuted}>No diff!</text>
               </box>
             </Match>
             <Match when={!diff.loading}>

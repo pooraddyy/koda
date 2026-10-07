@@ -15,23 +15,49 @@ type DatabaseService = Database.Interface["db"]
 
 export { Admitted, Delivery }
 
-const decodePrompt = Schema.decodeUnknownSync(Prompt)
+export class PromptDecodeError extends Schema.TaggedErrorClass<PromptDecodeError>()("SessionInput.PromptDecodeError", {
+  id: SessionMessage.ID,
+  sessionID: SessionSchema.ID,
+}) {
+  override get message() {
+    return `Failed to decode prompt ${this.id} in session ${this.sessionID}`
+  }
+}
+
+const decodePrompt = Schema.decodeEffect(Prompt)
 const encodePrompt = Schema.encodeSync(Prompt)
 
-const fromRow = (row: typeof SessionInputTable.$inferSelect): Admitted =>
-  Admitted.make({
-    admittedSeq: row.admitted_seq,
-    id: SessionMessage.ID.make(row.id),
-    sessionID: SessionSchema.ID.make(row.session_id),
-    prompt: decodePrompt(row.prompt),
-    delivery: row.delivery,
-    timeCreated: DateTime.makeUnsafe(row.time_created),
-    ...(row.promoted_seq === null ? {} : { promotedSeq: row.promoted_seq }),
-  })
+// A corrupt prompt row surfaces as a typed PromptDecodeError failure, never an untyped defect.
+const decodePromptRow = (row: typeof SessionInputTable.$inferSelect) =>
+  decodePrompt(row.prompt).pipe(
+    Effect.mapError(
+      () =>
+        new PromptDecodeError({
+          id: SessionMessage.ID.make(row.id),
+          sessionID: SessionSchema.ID.make(row.session_id),
+        }),
+    ),
+  )
+
+const fromRow = (row: typeof SessionInputTable.$inferSelect) =>
+  decodePromptRow(row).pipe(
+    Effect.map((prompt) =>
+      Admitted.make({
+        admittedSeq: row.admitted_seq,
+        id: SessionMessage.ID.make(row.id),
+        sessionID: SessionSchema.ID.make(row.session_id),
+        prompt,
+        delivery: row.delivery,
+        timeCreated: DateTime.makeUnsafe(row.time_created),
+        ...(row.promoted_seq === null ? {} : { promotedSeq: row.promoted_seq }),
+      }),
+    ),
+  )
 
 export const find = Effect.fn("SessionInput.find")(function* (db: DatabaseService, id: SessionMessage.ID) {
   const row = yield* db.select().from(SessionInputTable).where(eq(SessionInputTable.id, id)).get().pipe(Effect.orDie)
-  return row === undefined ? undefined : fromRow(row)
+  if (row === undefined) return undefined
+  return yield* fromRow(row)
 })
 
 export class LifecycleConflict extends Schema.TaggedErrorClass<LifecycleConflict>()("SessionInput.LifecycleConflict", {
@@ -140,7 +166,7 @@ export const projectPrompted = Effect.fn("SessionInput.projectPrompted")(functio
     .get()
     .pipe(Effect.orDie)
   if (updated) {
-    const stored = fromRow(updated)
+    const stored = yield* fromRow(updated)
     if (!matchesProjection(stored, input)) return yield* Effect.die(new LifecycleConflict({ id: input.id }))
     return
   }
@@ -226,7 +252,7 @@ const publish = Effect.fn("SessionInput.publish")(function* (
         sessionID,
         timestamp: DateTime.makeUnsafe(row.time_created),
         messageID: id,
-        prompt: decodePrompt(row.prompt),
+        prompt: yield* decodePromptRow(row),
         delivery: row.delivery,
       })
       .pipe(

@@ -1,7 +1,7 @@
 export * as PluginHost from "./host"
 
 import type { PluginContext as Interface } from "@koda-ai/plugin/v2/effect"
-import { Effect, Schema } from "effect"
+import { Effect, Exit, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { AISDK } from "../aisdk"
 import { Catalog } from "../catalog"
@@ -16,6 +16,26 @@ import type { DeepMutable } from "../schema"
 import { SkillV2 } from "../skill"
 
 const mutable = <T>(value: T) => value as DeepMutable<T>
+
+/** Typed error for malformed input supplied by third-party plugin code. */
+export class PluginInputError extends Schema.TaggedErrorClass<PluginInputError>()("PluginHost.PluginInputError", {
+  hook: Schema.String,
+  message: Schema.String,
+}) {}
+
+// Plugin-supplied data is untrusted: decode it into a typed PluginInputError
+// instead of letting Schema throw an untyped defect into host Effect code.
+const decodePluginInput = <S extends Schema.Decoder<unknown>>(
+  hook: string,
+  schema: S,
+  input: unknown,
+): S["Type"] => {
+  const decoded = Schema.decodeExit(schema)(input)
+  if (!Exit.isSuccess(decoded)) {
+    throw new PluginInputError({ hook, message: `Invalid input for ${hook}` })
+  }
+  return decoded.value
+}
 
 export const make = Effect.fn("PluginHost.make")(function* (plugin: PluginV2.Interface) {
   const agents = yield* AgentV2.Service
@@ -185,7 +205,10 @@ export const make = Effect.fn("PluginHost.make")(function* (plugin: PluginV2.Int
                 })
               },
               remove: (id, method) =>
-                draft.method.remove(Integration.ID.make(id), Schema.decodeUnknownSync(Integration.Method)(method)),
+                draft.method.remove(
+                  Integration.ID.make(id),
+                  decodePluginInput("integration.method.remove", Integration.Method, method),
+                ),
             },
           }),
         ),
@@ -199,7 +222,7 @@ export const make = Effect.fn("PluginHost.make")(function* (plugin: PluginV2.Int
       transform: (callback) =>
         reference.transform((draft) =>
           callback({
-            add: (name, source) => draft.add(name, Schema.decodeUnknownSync(Reference.Source)(source)),
+            add: (name, source) => draft.add(name, decodePluginInput("reference.add", Reference.Source, source)),
             remove: draft.remove,
             list: draft.list,
           }),
@@ -210,7 +233,7 @@ export const make = Effect.fn("PluginHost.make")(function* (plugin: PluginV2.Int
       transform: (callback) =>
         skill.transform((draft) =>
           callback({
-            source: (source) => draft.source(Schema.decodeUnknownSync(SkillV2.Source)(source)),
+            source: (source) => draft.source(decodePluginInput("skill.source", SkillV2.Source, source)),
             list: draft.list,
           }),
         ),

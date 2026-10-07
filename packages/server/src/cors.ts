@@ -10,10 +10,20 @@ export const CorsConfig = Context.Reference<CorsOptions | undefined>("@koda/Serv
 
 export function isAllowedCorsOrigin(input: string | undefined, opts?: CorsOptions) {
   if (!input) return true
-  if (input.startsWith("http://localhost:")) return true
-  if (input.startsWith("http://127.0.0.1:")) return true
+  if (isLoopbackOrigin(input)) return true
   if (kodaOrigin.test(input)) return true
   return opts?.cors?.includes(input) ?? false
+}
+
+// `startsWith("http://localhost:")` is bypassable, so parse and compare the hostname
+// instead.
+function isLoopbackOrigin(input: string) {
+  try {
+    const url = new URL(input)
+    return url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+  } catch {
+    return false
+  }
 }
 
 export function isAllowedRequestOrigin(input: string | undefined, host: string | undefined, opts?: CorsOptions) {

@@ -6,6 +6,7 @@ import { Locale } from "../../util/locale"
 import { useSDK } from "../../context/sdk"
 import { useRoute } from "../../context/route"
 import { useDialog, type DialogContext } from "../../ui/dialog"
+import { useToast } from "../../ui/toast"
 import type { PromptInfo } from "../../component/prompt/history"
 import { stripPromptPartIDs as strip } from "../../prompt/part"
 
@@ -14,6 +15,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
   const dialog = useDialog()
   const sdk = useSDK()
   const route = useRoute()
+  const toast = useToast()
 
   onMount(() => {
     dialog.setSize("large")
@@ -26,8 +28,12 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
       value: undefined,
       onSelect: async (dialog: DialogContext) => {
         const forked = await sdk.client.session.fork({ sessionID: props.sessionID })
+        if (forked.error || !forked.data) {
+          toast.show({ message: "Failed to fork session", variant: "error" })
+          return
+        }
         route.navigate({
-          sessionID: forked.data!.id,
+          sessionID: forked.data.id,
           type: "session",
         })
         dialog.clear()
@@ -49,6 +55,10 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
             sessionID: props.sessionID,
             messageID: message.id,
           })
+          if (forked.error || !forked.data) {
+            toast.show({ message: "Failed to fork session", variant: "error" })
+            return
+          }
           const parts = sync.data.part[message.id] ?? []
           const prompt = parts.reduce(
             (agg, part) => {
@@ -61,7 +71,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
             { input: "", parts: [] as PromptInfo["parts"] },
           )
           route.navigate({
-            sessionID: forked.data!.id,
+            sessionID: forked.data.id,
             type: "session",
             prompt,
           })

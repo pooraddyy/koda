@@ -10,6 +10,8 @@ import { SessionV1 } from "../v1/session"
 import { WorkspaceTable } from "../control-plane/workspace.sql"
 import { SessionMessage } from "./message"
 import { SessionMessageUpdater } from "./message-updater"
+import { MessageDecodeError } from "./error"
+import { SessionSchema } from "./schema"
 import { SessionInput } from "./input"
 import { WorkspaceV2 } from "../workspace"
 import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
@@ -17,7 +19,6 @@ import type { DeepMutable } from "../schema"
 
 type DatabaseService = Database.Interface["db"]
 
-const decodeMessage = Schema.decodeUnknownSync(SessionMessage.Message)
 const encodeMessage = Schema.encodeSync(SessionMessage.Message)
 
 export class SessionAlreadyProjected extends Error {}
@@ -110,8 +111,19 @@ function applyUsage(
 
 function run(db: DatabaseService, event: SessionEvent.Event) {
   return Effect.gen(function* () {
+    // A corrupt message row dies with a typed MessageDecodeError. The projector's
+    // Subscriber contract cannot surface failures, so this must never be an untyped defect.
     const decodeRow = (row: typeof SessionMessageTable.$inferSelect) =>
-      decodeMessage({ ...row.data, id: row.id, type: row.type })
+      Schema.decodeUnknownEffect(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }).pipe(
+        Effect.mapError(
+          () =>
+            new MessageDecodeError({
+              sessionID: SessionSchema.ID.make(row.session_id),
+              messageID: SessionMessage.ID.make(row.id),
+            }),
+        ),
+        Effect.orDie,
+      )
     const updateMessage = (message: SessionMessage.Message) => {
       if (event.durable === undefined) return Effect.die("Durable Session event is missing aggregate sequence")
       const encoded = encodeMessage(message)
@@ -144,7 +156,7 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
             .get()
             .pipe(Effect.orDie)
           if (!row) return
-          const message = decodeRow(row)
+          const message = yield* decodeRow(row)
           return message.type === "assistant" && !message.time.completed ? message : undefined
         })
       },
@@ -163,7 +175,7 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
             .get()
             .pipe(Effect.orDie)
           if (!row) return
-          const message = decodeRow(row)
+          const message = yield* decodeRow(row)
           return message.type === "assistant" ? message : undefined
         })
       },
@@ -176,9 +188,10 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
             .orderBy(desc(SessionMessageTable.seq))
             .all()
             .pipe(Effect.orDie)
-          return rows
-            .map(decodeRow)
-            .find((message): message is SessionMessage.Shell => message.type === "shell" && message.callID === callID)
+          const messages = yield* Effect.forEach(rows, decodeRow)
+          return messages.find(
+            (message): message is SessionMessage.Shell => message.type === "shell" && message.callID === callID,
+          )
         })
       },
       updateAssistant: updateMessage,
@@ -348,6 +361,8 @@ const layer = Layer.effectDiscard(
     yield* events.project(SessionEvent.Prompted, (event) =>
       Effect.gen(function* () {
         if (event.durable === undefined) return yield* Effect.die("Durable Session event is missing aggregate sequence")
+        // The Subscriber contract cannot surface failures: a corrupt prompt row dies
+        // as a typed PromptDecodeError defect instead of an untyped one.
         yield* SessionInput.projectPrompted(db, {
           id: event.data.messageID,
           sessionID: event.data.sessionID,
@@ -355,7 +370,7 @@ const layer = Layer.effectDiscard(
           delivery: event.data.delivery,
           timeCreated: event.data.timestamp,
           promotedSeq: event.durable.seq,
-        })
+        }).pipe(Effect.orDie)
         yield* run(db, event)
       }),
     )

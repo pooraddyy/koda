@@ -278,8 +278,8 @@ const run = Effect.fn("Cli.export.body")(function* (args: { sessionID?: string; 
     prompts.outro("Exporting session...", { output: process.stderr })
   }
 
-  // Match legacy try/catch — catches both typed failures and defects
-  // (Session.Service.get throws NotFoundError as a defect, not a typed E).
+  // Only the typed NotFoundError means "session doesn't exist" — defects
+  // (DB failures, programming bugs) must propagate, not masquerade as it.
   return yield* Effect.gen(function* () {
     const sessionInfo = yield* svc.get(sessionID!)
     const messages = yield* svc.messages({ sessionID: sessionInfo.id })
@@ -288,5 +288,5 @@ const run = Effect.fn("Cli.export.body")(function* (args: { sessionID?: string; 
 
     process.stdout.write(JSON.stringify(args.sanitize ? sanitize(exportData) : exportData, null, 2))
     process.stdout.write(EOL)
-  }).pipe(Effect.catchCause(() => fail(`Session not found: ${sessionID!}`)))
+  }).pipe(Effect.catchTag("NotFoundError", () => fail(`Session not found: ${sessionID!}`)))
 })

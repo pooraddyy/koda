@@ -1,6 +1,13 @@
 import nodePath from "path"
 import { customType } from "drizzle-orm/sqlite-core"
+import { Schema } from "effect"
 import { AbsolutePath } from "../schema"
+
+/** Typed error for a column value that cannot be decoded from its driver form. */
+export class InvalidColumnError extends Schema.TaggedErrorClass<InvalidColumnError>()("Database.InvalidColumn", {
+  column: Schema.String,
+  cause: Schema.Unknown,
+}) {}
 
 function storagePath(input: string) {
   if (process.platform !== "win32") return input
@@ -86,6 +93,12 @@ export const absoluteArrayColumn = customType<{
     return JSON.stringify(input.map(absolute))
   },
   fromDriver(input) {
-    return (JSON.parse(input) as string[]).map((item) => AbsolutePath.make(toPlatform(absolute(item))))
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(input)
+    } catch (cause) {
+      throw new InvalidColumnError({ column: "absoluteArrayColumn", cause })
+    }
+    return (parsed as string[]).map((item) => AbsolutePath.make(toPlatform(absolute(item))))
   },
 })

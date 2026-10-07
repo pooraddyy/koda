@@ -1247,7 +1247,7 @@ export interface Interface {
   readonly list: () => Effect.Effect<Record<ProviderV2.ID, Info>>
   readonly getProvider: (providerID: ProviderV2.ID) => Effect.Effect<Info>
   readonly getModel: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => Effect.Effect<Model, ModelNotFoundError>
-  readonly getLanguage: (model: Model) => Effect.Effect<LanguageModelV3, ModelNotFoundError>
+  readonly getLanguage: (model: Model) => Effect.Effect<LanguageModelV3, ModelNotFoundError | InitError>
   readonly closest: (
     providerID: ProviderV2.ID,
     query: string[],
@@ -1939,10 +1939,13 @@ const layer = Layer.effect(
           s.models.set(key, language)
           return language
         },
-        (cause) =>
-          cause instanceof NoSuchModelError
-            ? new ModelNotFoundError({ modelID: model.id, providerID: model.providerID, cause })
-            : undefined,
+        (cause) => {
+          if (cause instanceof NoSuchModelError) {
+            return new ModelNotFoundError({ modelID: model.id, providerID: model.providerID, cause })
+          }
+          if (cause instanceof InitError) return cause
+          return undefined
+        },
       )
     })
 
@@ -2071,7 +2074,14 @@ const smallModelFamilyPriority = ["gemini-flash", "gpt-nano", "claude-haiku"]
 export function sort<T extends { id: string }>(models: T[]) {
   return sortBy(
     models,
-    [(model) => priority.findIndex((filter) => model.id.includes(filter)), "desc"],
+    [
+      // Priority-listed models first (in listed order); non-matching models sort after all of them.
+      (model) => {
+        const index = priority.findIndex((filter) => model.id.includes(filter))
+        return index === -1 ? Number.MAX_SAFE_INTEGER : index
+      },
+      "asc",
+    ],
     [(model) => (model.id.includes("latest") ? 0 : 1), "asc"],
     [(model) => model.id, "desc"],
   )

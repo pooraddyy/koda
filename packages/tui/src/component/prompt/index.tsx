@@ -234,18 +234,20 @@ export function Prompt(props: PromptProps) {
   let promptPartTypeId = 0
   const event = useEvent()
 
-  event.on("tui.prompt.append", (evt, { workspace }) => {
-    if (workspace !== project.workspace.current()) return
-    if (!input || input.isDestroyed) return
-    input.insertText(evt.properties.text)
-    setTimeout(() => {
-      // setTimeout is a workaround and needs to be addressed properly
+  onCleanup(
+    event.on("tui.prompt.append", (evt, { workspace }) => {
+      if (workspace !== project.workspace.current()) return
       if (!input || input.isDestroyed) return
-      input.getLayoutNode().markDirty()
-      input.gotoBufferEnd()
-      renderer.requestRender()
-    }, 0)
-  })
+      input.insertText(evt.properties.text)
+      setTimeout(() => {
+        // setTimeout is a workaround and needs to be addressed properly
+        if (!input || input.isDestroyed) return
+        input.getLayoutNode().markDirty()
+        input.gotoBufferEnd()
+        renderer.requestRender()
+      }, 0)
+    }),
+  )
 
   createEffect(() => {
     if (!input || input.isDestroyed) return
@@ -1189,7 +1191,8 @@ export function Prompt(props: PromptProps) {
       const attachment = await readLocalAttachment(filepath)
       const filename = path.basename(filepath)
       if (attachment?.type === "text") {
-        pasteText(attachment.content, `[SVG: ${filename ?? "image"}]`)
+        const kind = attachment.mime === "image/svg+xml" ? "SVG" : "Text"
+        pasteText(attachment.content, `[${kind}: ${filename}]`)
         return
       }
       if (attachment?.type === "binary") {
@@ -1543,7 +1546,7 @@ export function Prompt(props: PromptProps) {
                       const isTruncated = createMemo(() => {
                         const r = retry()
                         if (!r) return false
-                        return r.message.length > 120
+                        return r.message.length > 80
                       })
                       const [seconds, setSeconds] = createSignal(0)
                       onMount(() => {

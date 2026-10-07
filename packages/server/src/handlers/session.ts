@@ -357,9 +357,21 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
       .handle(
         "session.events",
         Effect.fn((ctx) =>
-          Effect.succeed(
-            session.events({ sessionID: ctx.params.sessionID, after: ctx.query.after }).pipe(Stream.orDie),
-          ),
+          Effect.gen(function* () {
+            // Fail fast with 404 before the SSE stream starts: a NotFoundError raised while
+            // the stream is consumed would truncate the response instead of producing a 404.
+            yield* session.get(ctx.params.sessionID).pipe(
+              Effect.catchTag(
+                "Session.NotFoundError",
+                (error) =>
+                  new SessionNotFoundError({
+                    sessionID: error.sessionID,
+                    message: `Session not found: ${error.sessionID}`,
+                  }),
+              ),
+            )
+            return session.events({ sessionID: ctx.params.sessionID, after: ctx.query.after }).pipe(Stream.orDie)
+          }),
         ),
       )
       .handle(

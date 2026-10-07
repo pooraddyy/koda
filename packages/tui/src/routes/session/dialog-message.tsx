@@ -4,6 +4,7 @@ import { DialogSelect } from "../../ui/dialog-select"
 import { useSDK } from "../../context/sdk"
 import { useRoute } from "../../context/route"
 import { useClipboard } from "../../context/clipboard"
+import { useToast } from "../../ui/toast"
 import type { PromptInfo } from "../../component/prompt/history"
 import { stripPromptPartIDs as strip } from "../../prompt/part"
 
@@ -17,6 +18,7 @@ export function DialogMessage(props: {
   const message = createMemo(() => sync.data.message[props.sessionID]?.find((x) => x.id === props.messageID))
   const route = useRoute()
   const clipboard = useClipboard()
+  const toast = useToast()
 
   return (
     <DialogSelect
@@ -36,7 +38,7 @@ export function DialogMessage(props: {
             })
 
             if (props.setPrompt) {
-              const parts = sync.data.part[msg.id]
+              const parts = sync.data.part[msg.id] ?? []
               const promptInfo = parts.reduce(
                 (agg, part) => {
                   if (part.type === "text") {
@@ -61,7 +63,7 @@ export function DialogMessage(props: {
             const msg = message()
             if (!msg) return
 
-            const parts = sync.data.part[msg.id]
+            const parts = sync.data.part[msg.id] ?? []
             const text = parts.reduce((agg, part) => {
               if (part.type === "text" && !part.synthetic) {
                 agg += part.text
@@ -82,9 +84,13 @@ export function DialogMessage(props: {
               sessionID: props.sessionID,
               messageID: props.messageID,
             })
+            if (result.error || !result.data) {
+              toast.show({ message: "Failed to fork session", variant: "error" })
+              return
+            }
             const msg = message()
             const prompt = msg
-              ? sync.data.part[msg.id].reduce(
+              ? (sync.data.part[msg.id] ?? []).reduce(
                   (agg, part) => {
                     if (part.type === "text") {
                       if (!part.synthetic) agg.input += part.text
@@ -96,7 +102,7 @@ export function DialogMessage(props: {
                 )
               : undefined
             route.navigate({
-              sessionID: result.data!.id,
+              sessionID: result.data.id,
               type: "session",
               prompt,
             })

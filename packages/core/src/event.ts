@@ -1,6 +1,6 @@
 export * as EventV2 from "./event"
 
-import { Cause, Context, Effect, Layer, Option, PubSub, Queue, Schema, Stream } from "effect"
+import { Cause, Context, Effect, Exit, Layer, Option, PubSub, Queue, Schema, Stream } from "effect"
 import { Event } from "@koda-ai/schema/event"
 import type { Data, Definition, Payload } from "@koda-ai/schema/event"
 import { and, asc, eq, gt, inArray } from "drizzle-orm"
@@ -52,11 +52,18 @@ const decodeSerializedEvent = (event: SerializedEvent): Payload => {
   if (!definition?.durable) {
     throw new InvalidDurableEventError({ type: event.type, message: `Unknown durable event type ${event.type}` })
   }
+  const data = Schema.decodeExit(definition.data)(event.data)
+  if (!Exit.isSuccess(data)) {
+    throw new InvalidDurableEventError({
+      type: event.type,
+      message: `Failed to decode data for durable event ${event.type} (seq ${event.seq})`,
+    })
+  }
   return {
     id: event.id,
     type: definition.type,
     durable: { aggregateID: event.aggregateID, seq: event.seq, version: definition.durable.version },
-    data: Schema.decodeUnknownSync(definition.data)(event.data),
+    data: data.value,
   }
 }
 
@@ -88,8 +95,9 @@ export const readAggregate = Effect.fn("EventV2.readAggregate")(function* <A>(
     .all()
     .pipe(Effect.orDie)
   const page = rows.slice(0, input.limit)
-  const decode = Schema.decodeUnknownSync(input.manifest.schema)
-  const events = page.map((event) =>
+  const decode = Schema.decodeEffect(input.manifest.schema)
+  // A single corrupt row must surface as a typed failure, never an untyped defect.
+  const events = yield* Effect.forEach(page, (event) =>
     decode({
       id: event.id,
       type: input.manifest.definitions.get(event.type)?.type ?? event.type,
@@ -99,7 +107,15 @@ export const readAggregate = Effect.fn("EventV2.readAggregate")(function* <A>(
         version: input.manifest.definitions.get(event.type)?.durable?.version,
       },
       data: event.data,
-    }),
+    }).pipe(
+      Effect.mapError(
+        () =>
+          new InvalidDurableEventError({
+            type: event.type,
+            message: `Failed to decode data for event ${event.type} (seq ${event.seq})`,
+          }),
+      ),
+    ),
   )
   return {
     events,
@@ -449,10 +465,19 @@ export const layerWith = (options?: LayerOptions) =>
               new InvalidDurableEventError({ type: event.type, message: `Unknown durable event type ${event.type}` }),
             )
           } else {
+            const data = Schema.decodeExit(definition.data)(event.data)
+            if (!Exit.isSuccess(data)) {
+              return yield* Effect.die(
+                new InvalidDurableEventError({
+                  type: event.type,
+                  message: `Failed to decode data for durable event ${event.type} (seq ${event.seq})`,
+                }),
+              )
+            }
             const payload = {
               id: event.id,
               type: definition.type,
-              data: Schema.decodeUnknownSync(definition.data)(event.data),
+              data: data.value,
             } as Payload
             const committed = yield* commitDurableEvent(definition, payload, {
               seq: event.seq,

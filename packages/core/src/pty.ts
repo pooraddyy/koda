@@ -165,7 +165,9 @@ const layer = Layer.effect(
     const create = Effect.fn("Pty.create")(function* (input: CreateInput) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      const args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+      // "-l" must precede user args: appended after e.g. "-c <cmd>" it would be
+      // consumed as $0 instead of enabling login mode.
+      const args = Shell.login(command) ? ["-l", ...(input.args ?? [])] : [...(input.args ?? [])]
       const cwd = input.cwd || location.directory
       const env = {
         ...process.env,

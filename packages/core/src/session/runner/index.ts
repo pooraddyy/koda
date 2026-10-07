@@ -4,6 +4,7 @@ import type { LLMError } from "@koda-ai/llm"
 import { Context, Effect } from "effect"
 import { SessionSchema } from "../schema"
 import type { ContextSnapshotDecodeError, MessageDecodeError } from "../error"
+import type { SessionInput } from "../input"
 import { SessionRunnerModel } from "./model"
 import type { SystemContext } from "../../system-context/index"
 import type { ToolOutputStore } from "../../tool-output-store"
@@ -13,6 +14,7 @@ export type RunError =
   | SessionRunnerModel.Error
   | MessageDecodeError
   | ContextSnapshotDecodeError
+  | SessionInput.PromptDecodeError
   | SystemContext.InitializationBlocked
   | ToolOutputStore.Error
 

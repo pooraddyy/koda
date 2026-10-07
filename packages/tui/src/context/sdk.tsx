@@ -109,9 +109,20 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
           attempt += 1
           if (abort.signal.aborted || ctrl.signal.aborted) break
 
-          // Exponential backoff
+          // Exponential backoff (abort-aware so shutdown doesn't hang)
           const backoff = Math.min(retryDelay * 2 ** (attempt - 1), maxRetryDelay)
-          await new Promise((resolve) => setTimeout(resolve, backoff))
+          await new Promise<void>((resolve) => {
+            function done() {
+              clearTimeout(timer)
+              abort.signal.removeEventListener("abort", onAbort)
+              ctrl.signal.removeEventListener("abort", onAbort)
+              resolve()
+            }
+            const onAbort = () => done()
+            const timer = setTimeout(done, backoff)
+            abort.signal.addEventListener("abort", onAbort)
+            ctrl.signal.addEventListener("abort", onAbort)
+          })
         }
       })().catch(() => {})
     }

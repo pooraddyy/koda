@@ -314,8 +314,7 @@ function AutoMethod(props: AutoMethodProps) {
         cmd: () => {
           const code =
             props.authorization.instructions.match(/[A-Z0-9]{4}-[A-Z0-9]{4,5}/)?.[0] ?? props.authorization.url
-          clipboard
-            .write?.(code)
+          void (clipboard.write?.(code) ?? Promise.resolve())
             .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
             .catch(toast.error)
         },
