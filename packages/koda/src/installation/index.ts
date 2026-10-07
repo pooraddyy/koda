@@ -259,7 +259,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
         }
 
         const response = yield* httpOk.execute(
-          HttpClientRequest.get("https://api.github.com/repos/pooraddyy/opencode-cli/releases/latest").pipe(
+          HttpClientRequest.get("https://api.github.com/repos/pooraddyy/koda/releases/latest").pipe(
             HttpClientRequest.acceptJson,
           ),
         )

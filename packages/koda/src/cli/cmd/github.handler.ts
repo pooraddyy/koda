@@ -364,7 +364,7 @@ jobs:
           persist-credentials: false
 
       - name: Run koda
-        uses: pooraddyy/opencode-cli/github@latest${envStr}
+        uses: pooraddyy/koda/github@latest${envStr}
         with:
           model: ${provider}/${model}`,
         )
